@@ -13,6 +13,7 @@ const (
 type CreateUserRequest struct {
 	Name     string `json:"name" binding:"required|email"`
 	Email    string `json:"email" binding:"required"`
+	Username string `json:"username" binding:"required"`
 	Role     string `json:"role" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
@@ -30,6 +31,7 @@ type DeleteUserRequest struct {
 
 type User struct {
 	ID       primitive.ObjectID `bson:"_id"`
+	Username string             `bson:"username" json:"username"`
 	Name     string             `bson:"name" json:"name"`
 	Email    string             `bson:"email" json:"email"`
 	Role     string             `bson:"role" json:"role"`
@@ -42,6 +44,7 @@ type UserRepository interface {
 	DeleteById(c context.Context, id string) error
 	Fetch(c context.Context) ([]User, error)
 	GetByEmail(c context.Context, email string) (User, error)
+	GetByUsername(c context.Context, username string) (User, error)
 	GetByID(c context.Context, id string) (User, error)
 	GetTotal(c context.Context) (int64, error)
 }
@@ -52,5 +55,6 @@ type UserUsecase interface {
 	Fetch(c context.Context) ([]User, error)
 	DeleteById(c context.Context, id string) error
 	GetUserByEmail(c context.Context, email string) (User, error)
+	GetUserByUsername(c context.Context, username string) (User, error)
 	GetUserByID(c context.Context, id string) (User, error)
 }

@@ -53,6 +53,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	user := domain.User{
 		ID:       primitive.NewObjectID(),
 		Name:     request.Name,
+		Username: request.Username,
 		Email:    request.Email,
 		Password: request.Password,
 		Role:     request.Role,
