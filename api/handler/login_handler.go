@@ -24,9 +24,9 @@ func (lc *LoginHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := lc.LoginUsecase.GetUserByEmail(c, request.Email)
+	user, err := lc.LoginUsecase.GetUserByUsername(c, request.Username)
 	if err != nil {
-		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "User not found with the given email"})
+		c.JSON(http.StatusNotFound, domain.ErrorResponse{Message: "User not found"})
 		return
 	}
 

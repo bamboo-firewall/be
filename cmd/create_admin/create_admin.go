@@ -42,6 +42,7 @@ func main() {
 	user := domain.User{
 		ID:       primitive.NewObjectID(),
 		Name:     "Admin",
+		Username: "admin",
 		Email:    "admin@example.com",
 		Password: string(encryptedPassword),
 		Role:     "admin",
