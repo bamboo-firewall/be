@@ -4,6 +4,7 @@ import (
 	"github.com/bamboo-firewall/be/domain"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFunc {
@@ -11,14 +12,14 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 		// Get current user/subject
 		sub, existed := c.Get("x-user-id")
 		if !existed {
-			c.AbortWithStatusJSON(401, domain.ErrorResponse{Message: "User hasn't logged in yet"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, domain.ErrorResponse{Message: "The request unauthorized"})
 			return
 		}
 
 		// Load policy from Database
 		err := enforcer.LoadPolicy()
 		if err != nil {
-			c.AbortWithStatusJSON(500, domain.ErrorResponse{Message: "Failed to load policy from DB"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Failed to load policy"})
 			return
 		}
 
@@ -26,12 +27,12 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 		ok, err := enforcer.Enforce(sub, obj, act)
 
 		if err != nil {
-			c.AbortWithStatusJSON(500, domain.ErrorResponse{Message: "Error occurred when authorizing user"})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, domain.ErrorResponse{Message: "Error occurred when authorizing user"})
 			return
 		}
 
 		if !ok {
-			c.AbortWithStatusJSON(403, domain.ErrorResponse{Message: "You are not authorized"})
+			c.AbortWithStatusJSON(http.StatusForbidden, domain.ErrorResponse{Message: "You are not authorized"})
 			return
 		}
 		c.Next()

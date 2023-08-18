@@ -9,7 +9,7 @@ import (
 )
 
 func NewMongoDatabase(env *Env) mongo.Client {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(env.MongoDbTimeOut)*time.Second)
 	defer cancel()
 
 	client, err := mongo.NewClient(env.MongoDbURI)
