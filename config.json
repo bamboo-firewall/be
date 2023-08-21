@@ -13,6 +13,6 @@
     "CORS_ALLOW_METHODS": "POST, GET, OPTIONS, PUT, DELETE",
     "CORS_ALLOW_ORIGINS": "*",
     "MONGO_TIMEOUT": 10,
-    "EmailDomain": "example.com",
+    "EMAIL_DOMAIN": "example.com",
     "ADMIN_ACCOUNT": "admin"
 }
