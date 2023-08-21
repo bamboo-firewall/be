@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/bamboo-firewall/be/bootstrap"
@@ -12,6 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const adminRole = "Admin"
 
 func main() {
 	app := bootstrap.App()
@@ -41,11 +44,11 @@ func main() {
 
 	user := domain.User{
 		ID:       primitive.NewObjectID(),
-		Name:     "Admin",
-		Username: "admin",
-		Email:    "admin@example.com",
+		Name:     env.AdminAccount,
+		Username: env.AdminAccount,
+		Email:    fmt.Sprintf("%s@%s", env.AdminAccount, env.EmailDomain),
 		Password: string(encryptedPassword),
-		Role:     "admin",
+		Role:     adminRole,
 	}
 
 	_, err = db.Collection(domain.CollectionUser).InsertOne(context.Background(), &user)

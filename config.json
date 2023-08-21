@@ -9,5 +9,10 @@
     "ACCESS_TOKEN_SECRET": "jzZU3qXB6QEArUPLFi3g",
     "REFRESH_TOKEN_SECRET": "kdrqZnivLJ5UoNq3ZkYT",
     "MONGO_URI": "mongodb://mongou:mongopass@mongodb:27017/?authSource=admin",
-    "ADMIN_PASSWORD": "n9dR63zeCAxEPY92"
+    "ADMIN_PASSWORD": "n9dR63zeCAxEPY92",
+    "CORS_ALLOW_METHODS": "POST, GET, OPTIONS, PUT, DELETE",
+    "CORS_ALLOW_ORIGINS": "*",
+    "MONGO_TIMEOUT": 10,
+    "EMAIL_DOMAIN": "example.com",
+    "ADMIN_ACCOUNT": "admin"
 }
