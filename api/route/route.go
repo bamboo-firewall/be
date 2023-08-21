@@ -15,7 +15,7 @@ import (
 )
 
 func Setup(env *bootstrap.Env, timeout time.Duration, db mongo.Database, gin *gin.Engine) {
-	gin.Use(middleware.CORSMiddleware())
+	gin.Use(middleware.CORSMiddleware(env))
 
 	adapterConfig := mongodbadapter.AdapterConfig{
 		DatabaseName: env.DBName,
