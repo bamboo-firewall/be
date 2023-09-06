@@ -11,7 +11,7 @@
     "MONGO_URI": "mongodb://mongou:mongopass@mongodb:27017/?authSource=admin",
     "ADMIN_PASSWORD": "n9dR63zeCAxEPY92",
     "CORS_ALLOW_METHODS": "POST, GET, OPTIONS, PUT, DELETE",
-    "CORS_ALLOW_ORIGINS": "*",
+    "CORS_ALLOW_ORIGIN": "*",
     "MONGO_TIMEOUT": 10,
     "EMAIL_DOMAIN": "example.com",
     "ADMIN_ACCOUNT": "admin"
