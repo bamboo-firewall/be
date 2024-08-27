@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
-	"github.com/bamboo-firewall/be/cmd/server/route"
 
 	"github.com/bamboo-firewall/be/cmd/server/pkg/http"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
+	"github.com/bamboo-firewall/be/cmd/server/route"
 )
 
 type App interface {
