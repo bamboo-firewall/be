@@ -1,7 +1,8 @@
 package route
 
 import (
-	"github.com/bamboo-firewall/be/v1/middleware"
+	"github.com/bamboo-firewall/be/api/v1/handler"
+	"github.com/bamboo-firewall/be/cmd/server/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ func RegisterHandler() http.Handler {
 	{
 
 	}
+	router.Handle(http.MethodGet, "/api/v1/ping", handler.Ping)
 
 	return router
 }

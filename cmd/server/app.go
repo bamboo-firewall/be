@@ -1,9 +1,9 @@
-package v1
+package main
 
 import (
 	"context"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
-	"github.com/bamboo-firewall/be/v1/route"
+	"github.com/bamboo-firewall/be/cmd/server/route"
 
 	"github.com/bamboo-firewall/be/cmd/server/pkg/http"
 )

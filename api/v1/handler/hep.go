@@ -2,6 +2,6 @@ package handler
 
 import "github.com/gin-gonic/gin"
 
-func Ping(c *gin.Context) {
-	c.JSON(200, "pong")
+func AddHep(c *gin.Context) {
+	
 }
