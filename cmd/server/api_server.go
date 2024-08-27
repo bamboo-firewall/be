@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/bamboo-firewall/be/v1"
 	"log"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/bamboo-firewall/be/cmd/apiserver/rest"
 )
 
 const (
@@ -17,7 +16,7 @@ const (
 )
 
 func main() {
-	app, err := rest.NewApp()
+	app, err := v1.NewApp()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,7 +26,7 @@ func main() {
 	interruptHandle(app)
 }
 
-func interruptHandle(app rest.App) {
+func interruptHandle(app v1.App) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 

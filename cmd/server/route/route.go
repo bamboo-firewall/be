@@ -1,9 +1,9 @@
 package route
 
 import (
+	"github.com/bamboo-firewall/be/v1/middleware"
 	"net/http"
 
-	"github.com/bamboo-firewall/be/cmd/apiserver/rest/middleware"
 	"github.com/gin-gonic/gin"
 )
 

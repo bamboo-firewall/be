@@ -1,11 +1,11 @@
-package rest
+package v1
 
 import (
 	"context"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
+	"github.com/bamboo-firewall/be/v1/route"
 
-	"github.com/bamboo-firewall/be/cmd/apiserver/pkg/http"
-	"github.com/bamboo-firewall/be/cmd/apiserver/rest/route"
-	"github.com/bamboo-firewall/be/pkg/storage"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/http"
 )
 
 type App interface {
