@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/bamboo-firewall/be/cmd/server/pkg/common/errlist"
@@ -23,8 +25,22 @@ func (r *PolicyMongo) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalN
 	return nil
 }
 
-func (r *PolicyMongo) DeleteGroupPolicy(ctx context.Context) *ierror.CoreError {
-	filter := bson.D{{Key: "_id", Value: nil}}
+func (r *PolicyMongo) GetGNPByName(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+	filter := bson.D{{Key: "metadata.name", Value: name}}
+
+	gnp := new(entity.GlobalNetworkPolicy)
+	err := r.mongo.Database.Collection(gnp.CollectionName()).FindOne(ctx, filter).Decode(gnp)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, errlist.ErrNotFoundHostEndpoint
+		}
+		return nil, errlist.ErrDatabase.WithChild(err)
+	}
+	return gnp, nil
+}
+
+func (r *PolicyMongo) DeleteGNPByName(ctx context.Context, name string) *ierror.CoreError {
+	filter := bson.D{{Key: "metadata.name", Value: name}}
 
 	_, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).DeleteOne(ctx, filter)
 	if err != nil {

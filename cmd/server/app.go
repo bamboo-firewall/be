@@ -9,6 +9,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
 	"github.com/bamboo-firewall/be/cmd/server/route"
+	"github.com/bamboo-firewall/be/config"
 )
 
 type App interface {
@@ -21,16 +22,20 @@ type app struct {
 	policyMongo *storage.PolicyMongo
 }
 
-func NewApp() (App, error) {
-	// get from env or argument
-	policyMongo, err := storage.NewPolicyMongo("mongodb://admin:password@localhost:27017/?w=majority&socketTimeoutMS=3000")
+func NewApp(cfg config.Config) (App, error) {
+	policyMongo, err := storage.NewPolicyMongo(cfg.DBURI)
 	if err != nil {
 		return nil, err
 	}
 
 	router := route.RegisterHandler(repository.NewPolicyMongo(policyMongo))
 	return &app{
-		httpServer:  httpbase.NewServer(router),
+		httpServer: httpbase.NewServer(router, httpbase.ConfigTimeout{
+			ReadTimeout:       cfg.HTTPServerReadTimeout,
+			ReadHeaderTimeout: cfg.HTTPServerReadHeaderTimeout,
+			WriteTimeout:      cfg.HTTPServerWriteTimeout,
+			IdleTimeout:       cfg.HTTPServerIdleTimeout,
+		}),
 		policyMongo: policyMongo,
 	}, nil
 }

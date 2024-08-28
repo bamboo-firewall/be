@@ -24,5 +24,17 @@ func RegisterHandler(repo *repository.PolicyMongo) http.Handler {
 		router.DELETE("/api/v1/hostEndpoints", hepHandler.Delete)
 	}
 
+	{
+		gnpHandler := handler.NewGNP(service.NewGNP(repo))
+		router.POST("/api/v1/globalNetworkPolicies", gnpHandler.Create)
+		router.DELETE("/api/v1/globalNetworkPolicies", gnpHandler.Delete)
+	}
+
+	{
+		gnsHandler := handler.NewGNS(service.NewGNS(repo))
+		router.POST("/api/v1/globalNetworkSets", gnsHandler.Create)
+		router.DELETE("/api/v1/globalNetworkSets", gnsHandler.Delete)
+	}
+
 	return router
 }

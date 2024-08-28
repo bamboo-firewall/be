@@ -37,3 +37,38 @@ type GNPSpecRuleEntity struct {
 	Nets  []string      `json:"nets" yaml:"nets"`
 	Ports []interface{} `json:"ports" yaml:"ports"`
 }
+
+type CreateGlobalNetworkPolicyInput struct {
+	Metadata    GNPMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
+	Spec        GNPSpecInput     `json:"spec" yaml:"spec"`
+	Description string           `json:"description" yaml:"description"`
+}
+
+type GNPMetadataInput struct {
+	Name   string            `json:"name" yaml:"name" validate:"required"`
+	Labels map[string]string `json:"labels" yaml:"labels"`
+}
+
+type GNPSpecInput struct {
+	Selector string             `json:"selector" yaml:"selector"`
+	Types    []string           `json:"types" yaml:"types"`
+	Ingress  []GNPSpecRuleInput `json:"ingress" yaml:"ingress"`
+	Egress   []GNPSpecRuleInput `json:"egress" yaml:"egress"`
+}
+
+type GNPSpecRuleInput struct {
+	Metadata    map[string]string      `json:"metadata" yaml:"metadata"`
+	Action      string                 `json:"action" yaml:"action"`
+	Protocol    string                 `json:"protocol" yaml:"protocol"`
+	Source      GNPSpecRuleEntityInput `json:"source" yaml:"source"`
+	Destination GNPSpecRuleEntityInput `json:"destination" yaml:"destination"`
+}
+
+type GNPSpecRuleEntityInput struct {
+	Nets  []string      `json:"nets" yaml:"nets"`
+	Ports []interface{} `json:"ports" yaml:"ports"`
+}
+
+type DeleteGlobalNetworkPolicyInput struct {
+	Metadata GNPMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
+}

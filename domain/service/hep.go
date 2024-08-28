@@ -17,17 +17,17 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
-func NewHEP(policyMongo *repository.PolicyMongo) *HEP {
-	return &HEP{
+func NewHEP(policyMongo *repository.PolicyMongo) *hep {
+	return &hep{
 		storage: policyMongo,
 	}
 }
 
-type HEP struct {
+type hep struct {
 	storage be.Storage
 }
 
-func (ds *HEP) CreateHEP(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error) {
+func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error) {
 	// ToDo: use transaction and lock row
 	hepExisted, coreErr := ds.storage.GetHostEndpointByName(ctx, input.Metadata.Name)
 	if coreErr != nil && !errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
@@ -43,7 +43,7 @@ func (ds *HEP) CreateHEP(ctx context.Context, input *model.CreateHostEndpointInp
 		})
 	}
 
-	hep := &entity.HostEndpoint{
+	hepEntity := &entity.HostEndpoint{
 		ID:      primitive.NewObjectID(),
 		UUID:    uuid.New().String(),
 		Version: 1,
@@ -61,19 +61,19 @@ func (ds *HEP) CreateHEP(ctx context.Context, input *model.CreateHostEndpointInp
 		UpdatedAt:   time.Now(),
 	}
 	if !errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
-		hep.ID = hepExisted.ID
-		hep.UUID = hepExisted.UUID
-		hep.Version = hepExisted.Version + 1
-		hep.CreatedAt = hepExisted.CreatedAt
+		hepEntity.ID = hepExisted.ID
+		hepEntity.UUID = hepExisted.UUID
+		hepEntity.Version = hepExisted.Version + 1
+		hepEntity.CreatedAt = hepExisted.CreatedAt
 	}
 
-	if coreErr = ds.storage.UpsertHostEndpoint(ctx, hep); coreErr != nil {
+	if coreErr = ds.storage.UpsertHostEndpoint(ctx, hepEntity); coreErr != nil {
 		return nil, httpbase.ErrDatabase(ctx, "Create host endpoint failed").SetSubError(coreErr)
 	}
-	return hep, nil
+	return hepEntity, nil
 }
 
-func (ds *HEP) DeleteHEP(ctx context.Context, name string) *ierror.Error {
+func (ds *hep) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteHostEndpointByName(ctx, name); coreErr != nil {
 		return httpbase.ErrDatabase(ctx, "Delete host endpoint failed").SetSubError(coreErr)
 	}

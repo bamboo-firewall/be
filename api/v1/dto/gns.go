@@ -21,3 +21,22 @@ type GNSMetadata struct {
 type GNSSpec struct {
 	Nets []string `json:"nets"`
 }
+
+type CreateGlobalNetworkSetInput struct {
+	Metadata    GNSMetadataInput `json:"metadata" validate:"required"`
+	Spec        GNSSpecInput     `json:"spec"`
+	Description string           `json:"description"`
+}
+
+type GNSMetadataInput struct {
+	Name   string            `json:"name" validate:"required"`
+	Labels map[string]string `json:"labels"`
+}
+
+type GNSSpecInput struct {
+	Nets []string `json:"nets"`
+}
+
+type DeleteGlobalNetworkSetInput struct {
+	Metadata GNSMetadataInput `json:"metadata" validate:"required"`
+}

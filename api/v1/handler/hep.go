@@ -15,8 +15,8 @@ import (
 )
 
 type hepService interface {
-	CreateHEP(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
-	DeleteHEP(ctx context.Context, name string) *ierror.Error
+	Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
+	Delete(ctx context.Context, name string) *ierror.Error
 }
 
 func NewHEP(s hepService) *hep {
@@ -36,7 +36,7 @@ func (h *hep) Create(c *gin.Context) {
 		return
 	}
 
-	hepEntity, ierr := h.service.CreateHEP(c.Request.Context(), mapper.ToCreateHostEndpointInput(in))
+	hepEntity, ierr := h.service.Create(c.Request.Context(), mapper.ToCreateHostEndpointInput(in))
 	if ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
@@ -45,13 +45,13 @@ func (h *hep) Create(c *gin.Context) {
 }
 
 func (h *hep) Delete(c *gin.Context) {
-	in := new(dto.CreateHostEndpointInput)
+	in := new(dto.DeleteHostEndpointInput)
 	if ierr := httpbase.BindInput(c, in); ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
 	}
 
-	if err := h.service.DeleteHEP(c.Request.Context(), in.Metadata.Name); err != nil {
+	if err := h.service.Delete(c.Request.Context(), in.Metadata.Name); err != nil {
 		httpbase.ReturnErrorResponse(c, err)
 		return
 	}

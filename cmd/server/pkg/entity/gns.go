@@ -7,13 +7,14 @@ import (
 )
 
 type GlobalNetworkSet struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	UUID      string             `bson:"uuid"`
-	Version   uint               `bson:"version"`
-	Metadata  GNSMetadata        `bson:"metadata"`
-	Spec      GNSSpec            `bson:"spec"`
-	CreatedAt time.Time          `bson:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at"`
+	ID          primitive.ObjectID `bson:"_id"`
+	UUID        string             `bson:"uuid"`
+	Version     uint               `bson:"version"`
+	Metadata    GNSMetadata        `bson:"metadata"`
+	Spec        GNSSpec            `bson:"spec"`
+	Description string             `bson:"description"`
+	CreatedAt   time.Time          `bson:"created_at"`
+	UpdatedAt   time.Time          `bson:"updated_at"`
 }
 
 type GNSMetadata struct {
