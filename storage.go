@@ -1,10 +1,14 @@
 package be
 
-import "context"
+import (
+	"context"
+
+	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+)
 
 type Storage interface {
-	AddHostEndpoint(ctx context.Context, hostEndpointName string, ip []string, networkInterface []string) error
-	DelHostEndpoint(ctx context.Context, hostEndpointName string) error
-	AddGroupPolicy(ctx context.Context, groupPolicyName string, groupPolicy string) error
-	DeleteGroupPolicy(ctx context.Context, groupPolicyName string)
+	UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpoint) *ierror.CoreError
+	GetHostEndpointByName(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.CoreError)
+	DeleteHostEndpointByName(ctx context.Context, name string) *ierror.CoreError
 }

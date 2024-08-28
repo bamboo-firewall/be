@@ -15,14 +15,16 @@ const (
 )
 
 func main() {
-	app, err := NewApp()
+	newApp, err := NewApp()
 	if err != nil {
 		log.Fatal(err)
 	}
 	go func() {
-		app.Start()
+		if err = newApp.Start(); err != nil {
+			log.Fatal(err)
+		}
 	}()
-	interruptHandle(app)
+	interruptHandle(newApp)
 }
 
 func interruptHandle(app App) {

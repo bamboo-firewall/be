@@ -2,42 +2,44 @@ package main
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/http"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
 	"github.com/bamboo-firewall/be/cmd/server/route"
 )
 
 type App interface {
-	Start()
+	Start() error
 	Stop(ctx context.Context) error
 }
 
 type app struct {
-	httpServer  *http.Server
+	httpServer  *httpbase.Server
 	policyMongo *storage.PolicyMongo
 }
 
 func NewApp() (App, error) {
 	// get from env or argument
-	configMongo := storage.ConfigMongo{}
-	policyMongo, err := storage.NewPolicyMongo(configMongo)
+	policyMongo, err := storage.NewPolicyMongo("mongodb://admin:password@localhost:27017/?w=majority&socketTimeoutMS=3000")
 	if err != nil {
 		return nil, err
 	}
 
-	router := route.RegisterHandler()
+	router := route.RegisterHandler(repository.NewPolicyMongo(policyMongo))
 	return &app{
-		httpServer:  http.NewServer(router),
+		httpServer:  httpbase.NewServer(router),
 		policyMongo: policyMongo,
 	}, nil
 }
 
-func (a *app) Start() {
-	// Handle ErrServerClosed
-	if err := a.httpServer.Start(); err != nil {
-		panic(err)
+func (a *app) Start() error {
+	if err := a.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
 	}
+	return nil
 }
 
 func (a *app) Stop(ctx context.Context) error {

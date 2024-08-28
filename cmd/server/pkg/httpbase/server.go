@@ -1,7 +1,8 @@
-package http
+package httpbase
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -40,5 +41,6 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop(ctx context.Context) error {
+	slog.Info("Stop http server")
 	return s.server.Shutdown(ctx)
 }

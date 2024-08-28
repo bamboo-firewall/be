@@ -3,5 +3,5 @@ package handler
 import "github.com/gin-gonic/gin"
 
 func Ping(c *gin.Context) {
-	c.JSON(200, "pong")
+	c.String(200, "pong")
 }
