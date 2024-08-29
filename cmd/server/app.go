@@ -18,17 +18,17 @@ type App interface {
 }
 
 type app struct {
-	httpServer  *httpbase.Server
-	policyMongo *storage.PolicyMongo
+	httpServer *httpbase.Server
+	policyDB   *storage.PolicyDB
 }
 
 func NewApp(cfg config.Config) (App, error) {
-	policyMongo, err := storage.NewPolicyMongo(cfg.DBURI)
+	policy, err := storage.NewPolicyDB(cfg.DBURI)
 	if err != nil {
 		return nil, err
 	}
 
-	router := route.RegisterHandler(repository.NewPolicyMongo(policyMongo))
+	router := route.RegisterHandler(repository.NewPolicy(policy))
 	return &app{
 		httpServer: httpbase.NewServer(router, httpbase.ConfigTimeout{
 			ReadTimeout:       cfg.HTTPServerReadTimeout,
@@ -36,7 +36,7 @@ func NewApp(cfg config.Config) (App, error) {
 			WriteTimeout:      cfg.HTTPServerWriteTimeout,
 			IdleTimeout:       cfg.HTTPServerIdleTimeout,
 		}),
-		policyMongo: policyMongo,
+		policyDB: policy,
 	}, nil
 }
 
@@ -51,7 +51,7 @@ func (a *app) Stop(ctx context.Context) error {
 	if err := a.httpServer.Stop(ctx); err != nil {
 		return err
 	}
-	if err := a.policyMongo.Stop(ctx); err != nil {
+	if err := a.policyDB.Stop(ctx); err != nil {
 		return err
 	}
 	return nil

@@ -11,7 +11,7 @@ import (
 	"github.com/bamboo-firewall/be/domain/service"
 )
 
-func RegisterHandler(repo *repository.PolicyMongo) http.Handler {
+func RegisterHandler(repo *repository.PolicyDB) http.Handler {
 	router := gin.New()
 
 	router.Use(gin.Recovery())

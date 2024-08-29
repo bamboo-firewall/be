@@ -10,11 +10,11 @@ import (
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
-type PolicyMongo struct {
+type PolicyDB struct {
 	Database *mongo.Database
 }
 
-func NewPolicyMongo(uri string) (*PolicyMongo, error) {
+func NewPolicyDB(uri string) (*PolicyDB, error) {
 	opts := options.Client()
 	opts.ApplyURI(uri)
 	cs, cErr := connstring.ParseAndValidate(uri)
@@ -28,10 +28,10 @@ func NewPolicyMongo(uri string) (*PolicyMongo, error) {
 	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
 		return nil, err
 	}
-	return &PolicyMongo{Database: client.Database(cs.Database)}, nil
+	return &PolicyDB{Database: client.Database(cs.Database)}, nil
 }
 
-func (pm *PolicyMongo) Stop(ctx context.Context) error {
+func (pm *PolicyDB) Stop(ctx context.Context) error {
 	slog.Info("Stop policy mongo")
 	return pm.Database.Client().Disconnect(ctx)
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 )
 
-func (r *PolicyMongo) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpoint) *ierror.CoreError {
+func (r *PolicyDB) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpoint) *ierror.CoreError {
 	filter := bson.D{{Key: "_id", Value: hep.ID}}
 	update := bson.D{{Key: "$set", Value: hep}}
 	opts := options.Update().SetUpsert(true)
@@ -25,7 +25,7 @@ func (r *PolicyMongo) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEn
 	return nil
 }
 
-func (r *PolicyMongo) GetHostEndpointByName(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.CoreError) {
+func (r *PolicyDB) GetHostEndpointByName(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.CoreError) {
 	filter := bson.D{{Key: "metadata.name", Value: name}}
 
 	hep := new(entity.HostEndpoint)
@@ -39,7 +39,7 @@ func (r *PolicyMongo) GetHostEndpointByName(ctx context.Context, name string) (*
 	return hep, nil
 }
 
-func (r *PolicyMongo) DeleteHostEndpointByName(ctx context.Context, name string) *ierror.CoreError {
+func (r *PolicyDB) DeleteHostEndpointByName(ctx context.Context, name string) *ierror.CoreError {
 	filter := bson.D{{Key: "metadata.name", Value: name}}
 
 	_, err := r.mongo.Database.Collection(entity.HostEndpoint{}.CollectionName()).DeleteOne(ctx, filter)

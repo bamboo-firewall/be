@@ -13,7 +13,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 )
 
-func (r *PolicyMongo) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) *ierror.CoreError {
+func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) *ierror.CoreError {
 	filter := bson.D{{Key: "_id", Value: gnp.ID}}
 	update := bson.D{{Key: "$set", Value: gnp}}
 	opts := options.Update().SetUpsert(true)
@@ -25,7 +25,7 @@ func (r *PolicyMongo) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalN
 	return nil
 }
 
-func (r *PolicyMongo) GetGNPByName(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+func (r *PolicyDB) GetGNPByName(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.CoreError) {
 	filter := bson.D{{Key: "metadata.name", Value: name}}
 
 	gnp := new(entity.GlobalNetworkPolicy)
@@ -39,7 +39,7 @@ func (r *PolicyMongo) GetGNPByName(ctx context.Context, name string) (*entity.Gl
 	return gnp, nil
 }
 
-func (r *PolicyMongo) DeleteGNPByName(ctx context.Context, name string) *ierror.CoreError {
+func (r *PolicyDB) DeleteGNPByName(ctx context.Context, name string) *ierror.CoreError {
 	filter := bson.D{{Key: "metadata.name", Value: name}}
 
 	_, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).DeleteOne(ctx, filter)
