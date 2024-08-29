@@ -1,4 +1,4 @@
-package http
+package httpbase
 
 import (
 	"context"
@@ -105,7 +105,7 @@ func WithConnContext(connContext func(ctx context.Context, c net.Conn) context.C
 	}
 }
 
-// WithHandlerTimeout use http.TimeoutHandler to handle request timeout
+// WithHandlerTimeout use httpbase.TimeoutHandler to handle request timeout
 // if handlerTimeout is zero, it will be ignored
 // WARN: sse, websocket, long-polling, etc... should not use this option
 func WithHandlerTimeout(handlerTimeout time.Duration) serverOption {

@@ -1,50 +1,57 @@
-package v1
+package main
 
 import (
 	"context"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
-	"github.com/bamboo-firewall/be/v1/route"
+	"errors"
+	"net/http"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/http"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
+	"github.com/bamboo-firewall/be/cmd/server/route"
+	"github.com/bamboo-firewall/be/config"
 )
 
 type App interface {
-	Start()
+	Start() error
 	Stop(ctx context.Context) error
 }
 
 type app struct {
-	httpServer  *http.Server
-	policyMongo *storage.PolicyMongo
+	httpServer *httpbase.Server
+	policyDB   *storage.PolicyDB
 }
 
-func NewApp() (App, error) {
-	// get from env or argument
-	configMongo := storage.ConfigMongo{}
-	policyMongo, err := storage.NewPolicyMongo(configMongo)
+func NewApp(cfg config.Config) (App, error) {
+	policy, err := storage.NewPolicyDB(cfg.DBURI)
 	if err != nil {
 		return nil, err
 	}
 
-	router := route.RegisterHandler()
+	router := route.RegisterHandler(repository.NewPolicy(policy))
 	return &app{
-		httpServer:  http.NewServer(router),
-		policyMongo: policyMongo,
+		httpServer: httpbase.NewServer(router, httpbase.ConfigTimeout{
+			ReadTimeout:       cfg.HTTPServerReadTimeout,
+			ReadHeaderTimeout: cfg.HTTPServerReadHeaderTimeout,
+			WriteTimeout:      cfg.HTTPServerWriteTimeout,
+			IdleTimeout:       cfg.HTTPServerIdleTimeout,
+		}),
+		policyDB: policy,
 	}, nil
 }
 
-func (a *app) Start() {
-	// Handle ErrServerClosed
-	if err := a.httpServer.Start(); err != nil {
-		panic(err)
+func (a *app) Start() error {
+	if err := a.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
 	}
+	return nil
 }
 
 func (a *app) Stop(ctx context.Context) error {
 	if err := a.httpServer.Stop(ctx); err != nil {
 		return err
 	}
-	if err := a.policyMongo.Stop(ctx); err != nil {
+	if err := a.policyDB.Stop(ctx); err != nil {
 		return err
 	}
 	return nil

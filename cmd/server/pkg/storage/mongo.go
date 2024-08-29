@@ -3,57 +3,24 @@ package storage
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
-const (
-	mongoDefaultMaxPoolSize     = 100
-	mongoDefaultMaxConnIdleTime = 30 * time.Minute
-
-	mongoSocketTimeout = 3 * time.Second
-)
-
-type ConfigMongo struct {
-	AuthMechanism   string
-	AuthSource      string
-	Username        string
-	Password        string
-	URI             string
-	SocketTimeout   time.Duration
-	MaxPoolSize     uint64
-	MaxConnIdleTime time.Duration
-}
-
-type PolicyMongo struct {
+type PolicyDB struct {
 	Database *mongo.Database
 }
 
-func NewPolicyMongo(config ConfigMongo) (*PolicyMongo, error) {
-	credential := options.Credential{
-		AuthMechanism: config.AuthMechanism,
-		AuthSource:    config.AuthSource,
-		Username:      config.Username,
-		Password:      config.Password,
-	}
+func NewPolicyDB(uri string) (*PolicyDB, error) {
 	opts := options.Client()
-	opts.ApplyURI(config.URI)
-	opts.SetAuth(credential)
-	opts.SetSocketTimeout(mongoSocketTimeout)
-
-	// config connection pool
-	if config.MaxPoolSize == 0 {
-		config.MaxPoolSize = mongoDefaultMaxPoolSize
+	opts.ApplyURI(uri)
+	cs, cErr := connstring.ParseAndValidate(uri)
+	if cErr != nil {
+		return nil, cErr
 	}
-	if config.MaxConnIdleTime <= 0 {
-		config.MaxConnIdleTime = mongoDefaultMaxConnIdleTime
-	}
-	opts.SetMaxPoolSize(config.MaxPoolSize)
-	opts.SetMaxConnIdleTime(config.MaxConnIdleTime)
-
 	client, err := mongo.Connect(context.Background(), opts)
 	if err != nil {
 		return nil, err
@@ -61,10 +28,10 @@ func NewPolicyMongo(config ConfigMongo) (*PolicyMongo, error) {
 	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
 		return nil, err
 	}
-	return &PolicyMongo{Database: client.Database("policy")}, nil
+	return &PolicyDB{Database: client.Database(cs.Database)}, nil
 }
 
-func (pm *PolicyMongo) Stop(ctx context.Context) error {
+func (pm *PolicyDB) Stop(ctx context.Context) error {
 	slog.Info("Stop policy mongo")
 	return pm.Database.Client().Disconnect(ctx)
 }
