@@ -17,7 +17,7 @@ type PolicyDB struct {
 func NewPolicyDB(uri string) (*PolicyDB, error) {
 	opts := options.Client()
 	opts.ApplyURI(uri)
-	cs, cErr := connstring.ParseAndValidate(uri)
+	_, cErr := connstring.ParseAndValidate(uri)
 	if cErr != nil {
 		return nil, cErr
 	}
@@ -28,7 +28,7 @@ func NewPolicyDB(uri string) (*PolicyDB, error) {
 	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
 		return nil, err
 	}
-	return &PolicyDB{Database: client.Database(cs.Database)}, nil
+	return &PolicyDB{Database: client.Database("bambooFirewall")}, nil
 }
 
 func (pm *PolicyDB) Stop(ctx context.Context) error {

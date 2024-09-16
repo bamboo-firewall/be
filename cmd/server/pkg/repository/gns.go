@@ -32,7 +32,7 @@ func (r *PolicyDB) GetGNSByName(ctx context.Context, name string) (*entity.Globa
 	err := r.mongo.Database.Collection(gns.CollectionName()).FindOne(ctx, filter).Decode(gns)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, errlist.ErrNotFoundHostEndpoint
+			return nil, errlist.ErrNotFoundGlobalNetworkSet
 		}
 		return nil, errlist.ErrDatabase.WithChild(err)
 	}
@@ -42,9 +42,21 @@ func (r *PolicyDB) GetGNSByName(ctx context.Context, name string) (*entity.Globa
 func (r *PolicyDB) DeleteGNSByName(ctx context.Context, name string) *ierror.CoreError {
 	filter := bson.D{{Key: "metadata.name", Value: name}}
 
-	_, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).DeleteOne(ctx, filter)
+	_, err := r.mongo.Database.Collection(entity.GlobalNetworkSet{}.CollectionName()).DeleteOne(ctx, filter)
 	if err != nil {
 		return errlist.ErrDatabase.WithChild(err)
 	}
 	return nil
+}
+
+func (r *PolicyDB) ListGNS(ctx context.Context) ([]*entity.GlobalNetworkSet, *ierror.CoreError) {
+	sets := make([]*entity.GlobalNetworkSet, 0)
+	cursor, err := r.mongo.Database.Collection(entity.GlobalNetworkSet{}.CollectionName()).Find(ctx, bson.D{})
+	if err != nil {
+		return nil, errlist.ErrDatabase.WithChild(err)
+	}
+	if err = cursor.All(ctx, &sets); err != nil {
+		return nil, errlist.ErrUnmarshalFailed.WithChild(err)
+	}
+	return sets, nil
 }

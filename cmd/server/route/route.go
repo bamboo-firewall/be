@@ -22,6 +22,8 @@ func RegisterHandler(repo *repository.PolicyDB) http.Handler {
 		hepHandler := handler.NewHEP(service.NewHEP(repo))
 		router.POST("/api/v1/hostEndpoints", hepHandler.Create)
 		router.DELETE("/api/v1/hostEndpoints", hepHandler.Delete)
+
+		router.POST("/api/internal/v1/hostEndpoints/byName/:name/fetchPolicies", hepHandler.FetchPolicies)
 	}
 
 	{

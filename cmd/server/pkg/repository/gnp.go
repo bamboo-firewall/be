@@ -32,7 +32,7 @@ func (r *PolicyDB) GetGNPByName(ctx context.Context, name string) (*entity.Globa
 	err := r.mongo.Database.Collection(gnp.CollectionName()).FindOne(ctx, filter).Decode(gnp)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, errlist.ErrNotFoundHostEndpoint
+			return nil, errlist.ErrNotFoundGlobalNetworkPolicy
 		}
 		return nil, errlist.ErrDatabase.WithChild(err)
 	}
@@ -47,4 +47,16 @@ func (r *PolicyDB) DeleteGNPByName(ctx context.Context, name string) *ierror.Cor
 		return errlist.ErrDatabase.WithChild(err)
 	}
 	return nil
+}
+
+func (r *PolicyDB) ListGNP(ctx context.Context) ([]*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+	policies := make([]*entity.GlobalNetworkPolicy, 0)
+	cursor, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).Find(ctx, bson.D{})
+	if err != nil {
+		return nil, errlist.ErrDatabase.WithChild(err)
+	}
+	if err = cursor.All(ctx, &policies); err != nil {
+		return nil, errlist.ErrUnmarshalFailed.WithChild(err)
+	}
+	return policies, nil
 }

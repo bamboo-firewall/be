@@ -21,7 +21,7 @@ const (
 
 func main() {
 	var pathConfig string
-	flag.StringVar(&pathConfig, "config-file", "", "path to config file")
+	flag.StringVar(&pathConfig, "config-file", "", "path to env config file")
 	flag.Parse()
 
 	cfg, err := loadConfig(pathConfig)

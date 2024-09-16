@@ -17,7 +17,7 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
-func NewGNP(policyMongo *repository.PolicyMongo) *gnp {
+func NewGNP(policyMongo *repository.PolicyDB) *gnp {
 	return &gnp{
 		storage: policyMongo,
 	}
@@ -86,7 +86,7 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if !errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkSet) {
+	if !errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkPolicy) {
 		gnpEntity.ID = gnpExisted.ID
 		gnpEntity.UUID = gnpExisted.UUID
 		gnpEntity.Version = gnpExisted.Version + 1

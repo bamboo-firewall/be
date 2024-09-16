@@ -60,3 +60,27 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 		Description: in.Description,
 	}
 }
+
+func ToFetchPoliciesInput(in *dto.FetchPoliciesInput) *model.FetchPoliciesInput {
+	return &model.FetchPoliciesInput{
+		Name:    in.Name,
+		Version: in.Version,
+	}
+}
+
+func ToFetchPoliciesOutput(hep *entity.HostEndpoint, policies []*entity.GlobalNetworkPolicy, sets []*entity.GlobalNetworkSet) *dto.FetchPoliciesOutput {
+	policiesDTOs := make([]*dto.GlobalNetworkPolicy, len(policies))
+	for i, policy := range policies {
+		policiesDTOs[i] = ToGlobalNetworkPolicyDTO(policy)
+	}
+	setDTOs := make([]*dto.GlobalNetworkSet, len(sets))
+	for i, set := range sets {
+		setDTOs[i] = ToGlobalNetworkSetDTO(set)
+	}
+	return &dto.FetchPoliciesOutput{
+		IsNew:        true,
+		HostEndpoint: ToHostEndpointDTO(hep),
+		GNPs:         policiesDTOs,
+		GNSs:         setDTOs,
+	}
+}

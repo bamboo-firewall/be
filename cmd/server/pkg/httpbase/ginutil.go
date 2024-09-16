@@ -2,6 +2,8 @@ package httpbase
 
 import (
 	"errors"
+	"log/slog"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -29,6 +31,9 @@ func ReturnErrorResponse(ctx *gin.Context, err *ierror.Error) {
 		Name:    err.Name,
 		Message: err.Message,
 		Detail:  err.Detail,
+	}
+	if err.HTTPStatusCode >= http.StatusInternalServerError {
+		slog.Error("something wrong", "error", err)
 	}
 	ctx.JSON(err.HTTPStatusCode, ErrorResponse{
 		Error: minifyErr,

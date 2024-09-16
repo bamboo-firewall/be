@@ -2,6 +2,7 @@ package httpbase
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 )
@@ -48,19 +49,19 @@ func toName(id ierror.ErrorCode) ierror.ErrorName {
 
 var (
 	ErrNotFound = func(ctx context.Context, msgID string) *ierror.Error {
-		return newClientIError(ctx, ErrorCodeNotFound, msgID)
+		return newClientIError(ctx, ErrorCodeNotFound, msgID).SetHTTPStatus(http.StatusNotFound)
 	}
 
 	ErrBindRequest = func(ctx context.Context, msgID string) *ierror.Error {
-		return newClientIError(ctx, ErrorCodeBadRequest, msgID)
+		return newClientIError(ctx, ErrorCodeBadRequest, msgID).SetHTTPStatus(http.StatusBadRequest)
 	}
 
 	ErrValidateRequest = func(ctx context.Context, msgID string) *ierror.Error {
-		return newClientIError(ctx, ErrorCodeBadRequest, msgID)
+		return newClientIError(ctx, ErrorCodeBadRequest, msgID).SetHTTPStatus(http.StatusBadRequest)
 	}
 
 	ErrDatabase = func(ctx context.Context, msgID string) *ierror.Error {
-		return newClientIError(ctx, ErrorCodeDatabase, msgID)
+		return newClientIError(ctx, ErrorCodeDatabase, msgID).SetHTTPStatus(http.StatusInternalServerError)
 	}
 )
 

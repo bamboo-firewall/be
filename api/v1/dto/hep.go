@@ -56,3 +56,27 @@ type HostEndpointSpecPortInput struct {
 type DeleteHostEndpointInput struct {
 	Metadata HostEndpointMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
 }
+
+type FetchPoliciesInput struct {
+	Name    string                   `uri:"name" validate:"required"`
+	Version string                   `json:"version"`
+	GNPs    []*FetchPoliciesInputGNP `json:"global_network_policies"`
+	GNSs    []*FetchPoliciesInputGNS `json:"global_network_sets"`
+}
+
+type FetchPoliciesInputGNP struct {
+	ID      string `json:"id"`
+	Version uint   `json:"version"`
+}
+
+type FetchPoliciesInputGNS struct {
+	ID      string `json:"id"`
+	Version uint   `json:"version"`
+}
+
+type FetchPoliciesOutput struct {
+	IsNew        bool                   `json:"is_new"`
+	HostEndpoint *HostEndpoint          `json:"host_endpoint"`
+	GNPs         []*GlobalNetworkPolicy `json:"global_network_policies"`
+	GNSs         []*GlobalNetworkSet    `json:"global_network_sets"`
+}

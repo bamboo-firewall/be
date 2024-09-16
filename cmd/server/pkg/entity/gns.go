@@ -18,8 +18,9 @@ type GlobalNetworkSet struct {
 }
 
 type GNSMetadata struct {
-	Name   string            `bson:"name"`
-	Labels map[string]string `bson:"labels"`
+	Name      string            `bson:"name"`
+	IPVersion int               `json:"ip_version"`
+	Labels    map[string]string `bson:"labels"`
 }
 
 type GNSSpec struct {

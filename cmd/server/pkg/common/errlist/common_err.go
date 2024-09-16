@@ -8,4 +8,6 @@ var (
 	ErrNotFoundHostEndpoint        = ierror.NewCoreError("err_not_found_host_endpoint", "")
 	ErrNotFoundGlobalNetworkPolicy = ierror.NewCoreError("err_not_found_global_network_policy", "")
 	ErrNotFoundGlobalNetworkSet    = ierror.NewCoreError("err_not_found_global_network_set", "")
+
+	ErrUnmarshalFailed = ierror.NewCoreError("err_unmarshal_failed", "")
 )

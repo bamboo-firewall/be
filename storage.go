@@ -14,7 +14,9 @@ type Storage interface {
 	UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) *ierror.CoreError
 	GetGNPByName(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.CoreError)
 	DeleteGNPByName(ctx context.Context, name string) *ierror.CoreError
+	ListGNP(ctx context.Context) ([]*entity.GlobalNetworkPolicy, *ierror.CoreError)
 	UpsertGNS(ctx context.Context, gns *entity.GlobalNetworkSet) *ierror.CoreError
 	GetGNSByName(ctx context.Context, name string) (*entity.GlobalNetworkSet, *ierror.CoreError)
 	DeleteGNSByName(ctx context.Context, name string) *ierror.CoreError
+	ListGNS(ctx context.Context) ([]*entity.GlobalNetworkSet, *ierror.CoreError)
 }

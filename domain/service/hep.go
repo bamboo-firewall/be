@@ -17,7 +17,7 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
-func NewHEP(policyMongo *repository.PolicyMongo) *hep {
+func NewHEP(policyMongo *repository.PolicyDB) *hep {
 	return &hep{
 		storage: policyMongo,
 	}
@@ -78,4 +78,26 @@ func (ds *hep) Delete(ctx context.Context, name string) *ierror.Error {
 		return httpbase.ErrDatabase(ctx, "Delete host endpoint failed").SetSubError(coreErr)
 	}
 	return nil
+}
+
+func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchPoliciesInput) (*entity.HostEndpoint, []*entity.GlobalNetworkPolicy, []*entity.GlobalNetworkSet, *ierror.Error) {
+	hepEntity, coreErr := ds.storage.GetHostEndpointByName(ctx, input.Name)
+	if coreErr != nil {
+		if errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
+			return nil, nil, nil, httpbase.ErrNotFound(ctx, "NotFound").SetSubError(coreErr)
+		}
+		return nil, nil, nil, httpbase.ErrDatabase(ctx, "Get host endpoint failed").SetSubError(coreErr)
+	}
+
+	policies, err := ds.storage.ListGNP(ctx)
+	if err != nil {
+		return nil, nil, nil, httpbase.ErrDatabase(ctx, "List policies failed").SetSubError(coreErr)
+	}
+
+	sets, err := ds.storage.ListGNS(ctx)
+	if err != nil {
+		return nil, nil, nil, httpbase.ErrDatabase(ctx, "List sets failed").SetSubError(coreErr)
+	}
+
+	return hepEntity, policies, sets, nil
 }

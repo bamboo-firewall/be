@@ -17,7 +17,7 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
-func NewGNS(policyMongo *repository.PolicyMongo) *gns {
+func NewGNS(policyMongo *repository.PolicyDB) *gns {
 	return &gns{
 		storage: policyMongo,
 	}
@@ -39,7 +39,9 @@ func (ds *gns) Create(ctx context.Context, input *model.CreateGlobalNetworkSetIn
 		UUID:    uuid.New().String(),
 		Version: 1,
 		Metadata: entity.GNSMetadata{
-			Name: input.Metadata.Name,
+			Name:      input.Metadata.Name,
+			IPVersion: input.Metadata.IPVersion,
+			Labels:    input.Metadata.Labels,
 		},
 		Spec: entity.GNSSpec{
 			Nets: input.Spec.Nets,

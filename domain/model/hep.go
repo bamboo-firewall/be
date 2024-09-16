@@ -22,3 +22,8 @@ type HostEndpointSpecPortInput struct {
 	Port     int
 	Protocol string
 }
+
+type FetchPoliciesInput struct {
+	Name    string
+	Version string
+}
