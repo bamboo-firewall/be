@@ -37,16 +37,21 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 	var specIngress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Ingress {
 		specIngress = append(specIngress, entity.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
+			Metadata:    rule.Metadata,
+			Action:      rule.Action,
+			Protocol:    rule.Protocol,
+			NotProtocol: rule.NotProtocol,
 			Source: entity.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
+				Nets:     rule.Source.Nets,
+				NotNets:  rule.Source.NotNets,
+				Ports:    rule.Source.Ports,
+				NotPorts: rule.Source.NotPorts,
 			},
 			Destination: entity.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
+				Nets:     rule.Destination.Nets,
+				NotNets:  rule.Destination.NotNets,
+				Ports:    rule.Destination.Ports,
+				NotPorts: rule.Destination.NotPorts,
 			},
 		})
 	}
@@ -54,16 +59,21 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 	var specEgress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Egress {
 		specEgress = append(specEgress, entity.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
+			Metadata:    rule.Metadata,
+			Action:      rule.Action,
+			Protocol:    rule.Protocol,
+			NotProtocol: rule.NotProtocol,
 			Source: entity.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
+				Nets:     rule.Source.Nets,
+				NotNets:  rule.Source.NotNets,
+				Ports:    rule.Source.Ports,
+				NotPorts: rule.Source.NotPorts,
 			},
 			Destination: entity.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
+				Nets:     rule.Destination.Nets,
+				NotNets:  rule.Destination.NotNets,
+				Ports:    rule.Destination.Ports,
+				NotPorts: rule.Destination.NotPorts,
 			},
 		})
 	}

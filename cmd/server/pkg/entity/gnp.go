@@ -33,13 +33,16 @@ type GNPSpecRule struct {
 	Metadata    map[string]string `bson:"metadata"`
 	Action      string            `bson:"action"`
 	Protocol    string            `bson:"protocol"`
+	NotProtocol string            `bson:"not_protocol"`
 	Source      GNPSpecRuleEntity `bson:"source"`
 	Destination GNPSpecRuleEntity `bson:"destination"`
 }
 
 type GNPSpecRuleEntity struct {
-	Nets  []string      `bson:"nets"`
-	Ports []interface{} `bson:"ports"`
+	Nets     []string      `bson:"nets"`
+	NotNets  []string      `bson:"not_nets"`
+	Ports    []interface{} `bson:"ports"`
+	NotPorts []interface{} `bson:"not_ports"`
 }
 
 func (GlobalNetworkPolicy) CollectionName() string {

@@ -13,36 +13,12 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 
 	var specIngress []dto.GNPSpecRule
 	for _, rule := range gnp.Spec.Ingress {
-		specIngress = append(specIngress, dto.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: dto.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: dto.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specIngress = append(specIngress, toRuleDTO(rule))
 	}
 
 	var specEgress []dto.GNPSpecRule
 	for _, rule := range gnp.Spec.Egress {
-		specEgress = append(specEgress, dto.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: dto.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: dto.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specEgress = append(specEgress, toRuleDTO(rule))
 	}
 	return &dto.GlobalNetworkPolicy{
 		ID:      gnp.ID.Hex(),
@@ -64,39 +40,36 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 	}
 }
 
+func toRuleDTO(rule entity.GNPSpecRule) dto.GNPSpecRule {
+	return dto.GNPSpecRule{
+		Metadata:    rule.Metadata,
+		Action:      rule.Action,
+		Protocol:    rule.Protocol,
+		NotProtocol: rule.NotProtocol,
+		Source: dto.GNPSpecRuleEntity{
+			Nets:     rule.Source.Nets,
+			NotNets:  rule.Source.NotNets,
+			Ports:    rule.Source.Ports,
+			NotPorts: rule.Source.NotPorts,
+		},
+		Destination: dto.GNPSpecRuleEntity{
+			Nets:     rule.Destination.Nets,
+			NotNets:  rule.Destination.NotNets,
+			Ports:    rule.Destination.Ports,
+			NotPorts: rule.Destination.NotPorts,
+		},
+	}
+}
+
 func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *model.CreateGlobalNetworkPolicyInput {
 	var specIngress []model.GNPSpecRuleInput
 	for _, rule := range in.Spec.Ingress {
-		specIngress = append(specIngress, model.GNPSpecRuleInput{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: model.GNPSpecRuleEntityInput{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: model.GNPSpecRuleEntityInput{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specIngress = append(specIngress, toRuleInput(rule))
 	}
 
 	var specEgress []model.GNPSpecRuleInput
 	for _, rule := range in.Spec.Egress {
-		specEgress = append(specEgress, model.GNPSpecRuleInput{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: model.GNPSpecRuleEntityInput{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: model.GNPSpecRuleEntityInput{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specEgress = append(specEgress, toRuleInput(rule))
 	}
 
 	return &model.CreateGlobalNetworkPolicyInput{
@@ -111,5 +84,26 @@ func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *m
 			Egress:   specEgress,
 		},
 		Description: in.Description,
+	}
+}
+
+func toRuleInput(rule dto.GNPSpecRuleInput) model.GNPSpecRuleInput {
+	return model.GNPSpecRuleInput{
+		Metadata:    rule.Metadata,
+		Action:      rule.Action,
+		Protocol:    rule.Protocol,
+		NotProtocol: rule.NotProtocol,
+		Source: model.GNPSpecRuleEntityInput{
+			Nets:     rule.Source.Nets,
+			NotNets:  rule.Source.NotNets,
+			Ports:    rule.Source.Ports,
+			NotPorts: rule.Source.NotPorts,
+		},
+		Destination: model.GNPSpecRuleEntityInput{
+			Nets:     rule.Destination.Nets,
+			NotNets:  rule.Destination.NotNets,
+			Ports:    rule.Destination.Ports,
+			NotPorts: rule.Destination.NotPorts,
+		},
 	}
 }

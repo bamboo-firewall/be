@@ -22,11 +22,14 @@ type GNPSpecRuleInput struct {
 	Metadata    map[string]string
 	Action      string
 	Protocol    string
+	NotProtocol string
 	Source      GNPSpecRuleEntityInput
 	Destination GNPSpecRuleEntityInput
 }
 
 type GNPSpecRuleEntityInput struct {
-	Nets  []string
-	Ports []interface{}
+	Nets     []string
+	NotNets  []string
+	Ports    []interface{}
+	NotPorts []interface{}
 }

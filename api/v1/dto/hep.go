@@ -9,8 +9,8 @@ type HostEndpoint struct {
 	Metadata    HostEndpointMetadata `json:"metadata" yaml:"metadata"`
 	Spec        HostEndpointSpec     `json:"spec" yaml:"spec"`
 	Description string               `json:"description" yaml:"description"`
-	CreatedAt   time.Time            `json:"created_at" yaml:"created_at"`
-	UpdatedAt   time.Time            `json:"updated_at" yaml:"updated_at"`
+	CreatedAt   time.Time            `json:"createdAt" yaml:"createdAt"`
+	UpdatedAt   time.Time            `json:"updatedAt" yaml:"updatedAt"`
 }
 
 type HostEndpointMetadata struct {
@@ -60,8 +60,8 @@ type DeleteHostEndpointInput struct {
 type FetchPoliciesInput struct {
 	Name    string                   `uri:"name" validate:"required"`
 	Version string                   `json:"version"`
-	GNPs    []*FetchPoliciesInputGNP `json:"global_network_policies"`
-	GNSs    []*FetchPoliciesInputGNS `json:"global_network_sets"`
+	GNPs    []*FetchPoliciesInputGNP `json:"globalNetworkPolicies"`
+	GNSs    []*FetchPoliciesInputGNS `json:"globalNetworkSets"`
 }
 
 type FetchPoliciesInputGNP struct {
@@ -75,8 +75,8 @@ type FetchPoliciesInputGNS struct {
 }
 
 type FetchPoliciesOutput struct {
-	IsNew        bool                   `json:"is_new"`
-	HostEndpoint *HostEndpoint          `json:"host_endpoint"`
-	GNPs         []*GlobalNetworkPolicy `json:"global_network_policies"`
-	GNSs         []*GlobalNetworkSet    `json:"global_network_sets"`
+	IsNew        bool                   `json:"isNew"`
+	HostEndpoint *HostEndpoint          `json:"hostEndpoint"`
+	GNPs         []*GlobalNetworkPolicy `json:"globalNetworkPolicies"`
+	GNSs         []*GlobalNetworkSet    `json:"globalNetworkSets"`
 }

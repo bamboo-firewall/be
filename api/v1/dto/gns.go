@@ -15,7 +15,7 @@ type GlobalNetworkSet struct {
 
 type GNSMetadata struct {
 	Name      string            `json:"name"`
-	IPVersion int               `json:"ip_version"`
+	IPVersion int               `json:"ipVersion"`
 	Labels    map[string]string `json:"labels"`
 }
 
@@ -31,7 +31,7 @@ type CreateGlobalNetworkSetInput struct {
 
 type GNSMetadataInput struct {
 	Name      string            `json:"name" validate:"required"`
-	IPVersion int               `json:"ip_version"`
+	IPVersion int               `json:"ipVersion"`
 	Labels    map[string]string `json:"labels"`
 }
 
