@@ -1,5 +1,7 @@
 package model
 
+import "github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+
 type CreateHostEndpointInput struct {
 	Metadata    HostEndpointMetadataInput
 	Spec        HostEndpointSpecInput
@@ -24,6 +26,49 @@ type HostEndpointSpecPortInput struct {
 }
 
 type FetchPoliciesInput struct {
-	Name    string
-	Version string
+	Name string
+}
+
+type HostEndPointPolicy struct {
+	MetaData       HostEndPointPolicyMetadata
+	HEP            *entity.HostEndpoint
+	ParsedPolicies []*ParsedPolicy
+	ParsedSets     []*ParsedSet
+}
+
+type HostEndPointPolicyMetadata struct {
+	HEPVersion  uint
+	GNPVersions map[string]uint
+	GNSVersions map[string]uint
+}
+
+type ParsedPolicy struct {
+	UUID          string
+	Version       uint
+	Name          string
+	InboundRules  []*ParsedRule
+	OutboundRules []*ParsedRule
+}
+
+type ParsedRule struct {
+	Action             string
+	IPVersion          int
+	Protocol           string
+	IsProtocolNegative bool
+	SrcNets            []string
+	IsSrcNetNegative   bool
+	SrcGNSNetNames     []string
+	SrcPorts           []string
+	IsSrcPortNegative  bool
+	DstNets            []string
+	IsDstNetNegative   bool
+	DstGNSNetNames     []string
+	DstPorts           []string
+	IsDstPortNegative  bool
+}
+
+type ParsedSet struct {
+	Name      string
+	IPVersion int
+	Nets      []string
 }

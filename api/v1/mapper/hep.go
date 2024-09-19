@@ -63,24 +63,72 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 
 func ToFetchPoliciesInput(in *dto.FetchPoliciesInput) *model.FetchPoliciesInput {
 	return &model.FetchPoliciesInput{
-		Name:    in.Name,
-		Version: in.Version,
+		Name: in.Name,
 	}
 }
 
-func ToFetchPoliciesOutput(hep *entity.HostEndpoint, policies []*entity.GlobalNetworkPolicy, sets []*entity.GlobalNetworkSet) *dto.FetchPoliciesOutput {
-	policiesDTOs := make([]*dto.GlobalNetworkPolicy, len(policies))
-	for i, policy := range policies {
-		policiesDTOs[i] = ToGlobalNetworkPolicyDTO(policy)
+func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.FetchPoliciesOutput {
+	policiesDTOs := make([]*dto.ParsedPolicy, len(hostEndpointPolicy.ParsedPolicies))
+	for i, policy := range hostEndpointPolicy.ParsedPolicies {
+		policiesDTOs[i] = ToParsedPolicyDTO(policy)
 	}
-	setDTOs := make([]*dto.GlobalNetworkSet, len(sets))
-	for i, set := range sets {
-		setDTOs[i] = ToGlobalNetworkSetDTO(set)
+	setDTOs := make([]*dto.ParsedSet, len(hostEndpointPolicy.ParsedSets))
+	for i, set := range hostEndpointPolicy.ParsedSets {
+		setDTOs[i] = ToParsedSetDTO(set)
 	}
 	return &dto.FetchPoliciesOutput{
-		IsNew:        true,
-		HostEndpoint: ToHostEndpointDTO(hep),
-		GNPs:         policiesDTOs,
-		GNSs:         setDTOs,
+		MetaData: dto.HostEndPointPolicyMetadata{
+			HEPVersion:  hostEndpointPolicy.MetaData.HEPVersion,
+			GNPVersions: hostEndpointPolicy.MetaData.GNPVersions,
+			GNSVersions: hostEndpointPolicy.MetaData.GNSVersions,
+		},
+		HEP:            ToHostEndpointDTO(hostEndpointPolicy.HEP),
+		ParsedPolicies: policiesDTOs,
+		ParsedSets:     setDTOs,
+	}
+}
+
+func ToParsedPolicyDTO(parsedPolicy *model.ParsedPolicy) *dto.ParsedPolicy {
+	var inboundRules []*dto.ParsedRule
+	for _, rule := range parsedPolicy.InboundRules {
+		inboundRules = append(inboundRules, ToParsedRuleDTO(rule))
+	}
+	var outboundRules []*dto.ParsedRule
+	for _, rule := range parsedPolicy.OutboundRules {
+		outboundRules = append(outboundRules, ToParsedRuleDTO(rule))
+	}
+	return &dto.ParsedPolicy{
+		UUID:          parsedPolicy.UUID,
+		Version:       parsedPolicy.Version,
+		Name:          parsedPolicy.Name,
+		InboundRules:  inboundRules,
+		OutboundRules: outboundRules,
+	}
+}
+
+func ToParsedRuleDTO(parsedRule *model.ParsedRule) *dto.ParsedRule {
+	return &dto.ParsedRule{
+		Action:             parsedRule.Action,
+		IPVersion:          parsedRule.IPVersion,
+		Protocol:           parsedRule.Protocol,
+		IsProtocolNegative: parsedRule.IsProtocolNegative,
+		SrcNets:            parsedRule.SrcNets,
+		IsSrcNetNegative:   parsedRule.IsSrcNetNegative,
+		SrcGNSNetNames:     parsedRule.SrcGNSNetNames,
+		SrcPorts:           parsedRule.SrcPorts,
+		IsSrcPortNegative:  parsedRule.IsSrcPortNegative,
+		DstNets:            parsedRule.DstNets,
+		IsDstNetNegative:   parsedRule.IsDstPortNegative,
+		DstGNSNetNames:     parsedRule.DstGNSNetNames,
+		DstPorts:           parsedRule.DstPorts,
+		IsDstPortNegative:  parsedRule.IsDstPortNegative,
+	}
+}
+
+func ToParsedSetDTO(parsedSet *model.ParsedSet) *dto.ParsedSet {
+	return &dto.ParsedSet{
+		Name:      parsedSet.Name,
+		IPVersion: parsedSet.IPVersion,
+		Nets:      parsedSet.Nets,
 	}
 }

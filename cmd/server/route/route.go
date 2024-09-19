@@ -23,7 +23,7 @@ func RegisterHandler(repo *repository.PolicyDB) http.Handler {
 		router.POST("/api/v1/hostEndpoints", hepHandler.Create)
 		router.DELETE("/api/v1/hostEndpoints", hepHandler.Delete)
 
-		router.POST("/api/internal/v1/hostEndpoints/byName/:name/fetchPolicies", hepHandler.FetchPolicies)
+		router.GET("/api/internal/v1/hostEndpoints/byName/:name/fetchPolicies", hepHandler.FetchPolicies)
 	}
 
 	{

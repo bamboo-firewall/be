@@ -30,6 +30,7 @@ type GNPSpecRule struct {
 	Action      string            `json:"action" yaml:"action"`
 	Protocol    string            `json:"protocol" yaml:"protocol"`
 	NotProtocol string            `json:"notProtocol" yaml:"notProtocol"`
+	IPVersion   int               `json:"ipVersion"`
 	Source      GNPSpecRuleEntity `json:"source" yaml:"source"`
 	Destination GNPSpecRuleEntity `json:"destination" yaml:"destination"`
 }
@@ -65,6 +66,7 @@ type GNPSpecRuleInput struct {
 	Action      string                 `json:"action" yaml:"action"`
 	Protocol    string                 `json:"protocol" yaml:"protocol"`
 	NotProtocol string                 `json:"notProtocol" yaml:"notProtocol"`
+	IPVersion   int                    `json:"ipVersion"`
 	Source      GNPSpecRuleEntityInput `json:"source" yaml:"source"`
 	Destination GNPSpecRuleEntityInput `json:"destination" yaml:"destination"`
 }

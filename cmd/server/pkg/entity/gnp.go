@@ -32,6 +32,7 @@ type GNPSpec struct {
 type GNPSpecRule struct {
 	Metadata    map[string]string `bson:"metadata"`
 	Action      string            `bson:"action"`
+	IPVersion   int               `bson:"ipVersion"`
 	Protocol    string            `bson:"protocol"`
 	NotProtocol string            `bson:"not_protocol"`
 	Source      GNPSpecRuleEntity `bson:"source"`
@@ -39,6 +40,7 @@ type GNPSpecRule struct {
 }
 
 type GNPSpecRuleEntity struct {
+	Selector string        `bson:"selector"`
 	Nets     []string      `bson:"nets"`
 	NotNets  []string      `bson:"not_nets"`
 	Ports    []interface{} `bson:"ports"`

@@ -23,11 +23,13 @@ type GNPSpecRuleInput struct {
 	Action      string
 	Protocol    string
 	NotProtocol string
+	IPVersion   int
 	Source      GNPSpecRuleEntityInput
 	Destination GNPSpecRuleEntityInput
 }
 
 type GNPSpecRuleEntityInput struct {
+	Selector string
 	Nets     []string
 	NotNets  []string
 	Ports    []interface{}

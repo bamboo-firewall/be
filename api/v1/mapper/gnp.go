@@ -46,13 +46,16 @@ func toRuleDTO(rule entity.GNPSpecRule) dto.GNPSpecRule {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
+		IPVersion:   rule.IPVersion,
 		Source: dto.GNPSpecRuleEntity{
+			Selector: rule.Source.Selector,
 			Nets:     rule.Source.Nets,
 			NotNets:  rule.Source.NotNets,
 			Ports:    rule.Source.Ports,
 			NotPorts: rule.Source.NotPorts,
 		},
 		Destination: dto.GNPSpecRuleEntity{
+			Selector: rule.Destination.Selector,
 			Nets:     rule.Destination.Nets,
 			NotNets:  rule.Destination.NotNets,
 			Ports:    rule.Destination.Ports,
@@ -93,13 +96,16 @@ func toRuleInput(rule dto.GNPSpecRuleInput) model.GNPSpecRuleInput {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
+		IPVersion:   rule.IPVersion,
 		Source: model.GNPSpecRuleEntityInput{
+			Selector: rule.Source.Selector,
 			Nets:     rule.Source.Nets,
 			NotNets:  rule.Source.NotNets,
 			Ports:    rule.Source.Ports,
 			NotPorts: rule.Source.NotPorts,
 		},
 		Destination: model.GNPSpecRuleEntityInput{
+			Selector: rule.Destination.Selector,
 			Nets:     rule.Destination.Nets,
 			NotNets:  rule.Destination.NotNets,
 			Ports:    rule.Destination.Ports,

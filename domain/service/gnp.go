@@ -36,46 +36,12 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 
 	var specIngress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Ingress {
-		specIngress = append(specIngress, entity.GNPSpecRule{
-			Metadata:    rule.Metadata,
-			Action:      rule.Action,
-			Protocol:    rule.Protocol,
-			NotProtocol: rule.NotProtocol,
-			Source: entity.GNPSpecRuleEntity{
-				Nets:     rule.Source.Nets,
-				NotNets:  rule.Source.NotNets,
-				Ports:    rule.Source.Ports,
-				NotPorts: rule.Source.NotPorts,
-			},
-			Destination: entity.GNPSpecRuleEntity{
-				Nets:     rule.Destination.Nets,
-				NotNets:  rule.Destination.NotNets,
-				Ports:    rule.Destination.Ports,
-				NotPorts: rule.Destination.NotPorts,
-			},
-		})
+		specIngress = append(specIngress, toRuleEntity(rule))
 	}
 
 	var specEgress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Egress {
-		specEgress = append(specEgress, entity.GNPSpecRule{
-			Metadata:    rule.Metadata,
-			Action:      rule.Action,
-			Protocol:    rule.Protocol,
-			NotProtocol: rule.NotProtocol,
-			Source: entity.GNPSpecRuleEntity{
-				Nets:     rule.Source.Nets,
-				NotNets:  rule.Source.NotNets,
-				Ports:    rule.Source.Ports,
-				NotPorts: rule.Source.NotPorts,
-			},
-			Destination: entity.GNPSpecRuleEntity{
-				Nets:     rule.Destination.Nets,
-				NotNets:  rule.Destination.NotNets,
-				Ports:    rule.Destination.Ports,
-				NotPorts: rule.Destination.NotPorts,
-			},
-		})
+		specEgress = append(specEgress, toRuleEntity(rule))
 	}
 
 	gnpEntity := &entity.GlobalNetworkPolicy{
@@ -114,4 +80,28 @@ func (ds *gnp) Delete(ctx context.Context, name string) *ierror.Error {
 		return httpbase.ErrDatabase(ctx, "Delete global network policy failed").SetSubError(coreErr)
 	}
 	return nil
+}
+
+func toRuleEntity(rule model.GNPSpecRuleInput) entity.GNPSpecRule {
+	return entity.GNPSpecRule{
+		Metadata:    rule.Metadata,
+		Action:      rule.Action,
+		Protocol:    rule.Protocol,
+		NotProtocol: rule.NotProtocol,
+		IPVersion:   rule.IPVersion,
+		Source: entity.GNPSpecRuleEntity{
+			Selector: rule.Source.Selector,
+			Nets:     rule.Source.Nets,
+			NotNets:  rule.Source.NotNets,
+			Ports:    rule.Source.Ports,
+			NotPorts: rule.Source.NotPorts,
+		},
+		Destination: entity.GNPSpecRuleEntity{
+			Selector: rule.Destination.Selector,
+			Nets:     rule.Destination.Nets,
+			NotNets:  rule.Destination.NotNets,
+			Ports:    rule.Destination.Ports,
+			NotPorts: rule.Destination.NotPorts,
+		},
+	}
 }

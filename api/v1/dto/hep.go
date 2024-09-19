@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type HostEndpoint struct {
 	ID          string               `json:"id"`
@@ -58,25 +60,49 @@ type DeleteHostEndpointInput struct {
 }
 
 type FetchPoliciesInput struct {
-	Name    string                   `uri:"name" validate:"required"`
-	Version string                   `json:"version"`
-	GNPs    []*FetchPoliciesInputGNP `json:"globalNetworkPolicies"`
-	GNSs    []*FetchPoliciesInputGNS `json:"globalNetworkSets"`
-}
-
-type FetchPoliciesInputGNP struct {
-	ID      string `json:"id"`
-	Version uint   `json:"version"`
-}
-
-type FetchPoliciesInputGNS struct {
-	ID      string `json:"id"`
-	Version uint   `json:"version"`
+	Name string `uri:"name" validate:"required"`
 }
 
 type FetchPoliciesOutput struct {
-	IsNew        bool                   `json:"isNew"`
-	HostEndpoint *HostEndpoint          `json:"hostEndpoint"`
-	GNPs         []*GlobalNetworkPolicy `json:"globalNetworkPolicies"`
-	GNSs         []*GlobalNetworkSet    `json:"globalNetworkSets"`
+	MetaData       HostEndPointPolicyMetadata `json:"metadata"`
+	HEP            *HostEndpoint              `json:"hostEndpoint"`
+	ParsedPolicies []*ParsedPolicy            `json:"parsedPolicies"`
+	ParsedSets     []*ParsedSet               `json:"parsedSets"`
+}
+
+type HostEndPointPolicyMetadata struct {
+	HEPVersion  uint            `json:"hepVersion"`
+	GNPVersions map[string]uint `json:"gnpVersions"`
+	GNSVersions map[string]uint `json:"gnsVersions"`
+}
+
+type ParsedPolicy struct {
+	UUID          string        `json:"uuid"`
+	Version       uint          `json:"version"`
+	Name          string        `json:"name"`
+	InboundRules  []*ParsedRule `json:"inboundRules"`
+	OutboundRules []*ParsedRule `json:"outboundRules"`
+}
+
+type ParsedRule struct {
+	Action             string   `json:"action"`
+	IPVersion          int      `json:"ipVersion"`
+	Protocol           string   `json:"protocol"`
+	IsProtocolNegative bool     `json:"isProtocolNegative"`
+	SrcNets            []string `json:"srcNets"`
+	IsSrcNetNegative   bool     `json:"isSrcNetNegative"`
+	SrcGNSNetNames     []string `json:"srcGNSNetNames"`
+	SrcPorts           []string `json:"srcPorts"`
+	IsSrcPortNegative  bool     `json:"isSrcPortNegative"`
+	DstNets            []string `json:"dstNets"`
+	IsDstNetNegative   bool     `json:"isDstNetNegative"`
+	DstGNSNetNames     []string `json:"dstGNSNetNames"`
+	DstPorts           []string `json:"dstPorts"`
+	IsDstPortNegative  bool     `json:"isDstPortNegative"`
+}
+
+type ParsedSet struct {
+	Name      string   `json:"name"`
+	IPVersion int      `json:"ipVersion"`
+	Nets      []string `json:"nets"`
 }

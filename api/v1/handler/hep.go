@@ -17,7 +17,7 @@ import (
 type hepService interface {
 	Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
-	FetchPolicies(ctx context.Context, input *model.FetchPoliciesInput) (*entity.HostEndpoint, []*entity.GlobalNetworkPolicy, []*entity.GlobalNetworkSet, *ierror.Error)
+	FetchPolicies(ctx context.Context, input *model.FetchPoliciesInput) (*model.HostEndPointPolicy, *ierror.Error)
 }
 
 func NewHEP(s hepService) *hep {
@@ -65,10 +65,10 @@ func (h *hep) FetchPolicies(c *gin.Context) {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
 	}
-	hostEndpoint, policies, sets, ierr := h.service.FetchPolicies(c.Request.Context(), mapper.ToFetchPoliciesInput(in))
+	hostEndpointPolicy, ierr := h.service.FetchPolicies(c.Request.Context(), mapper.ToFetchPoliciesInput(in))
 	if ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
 	}
-	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToFetchPoliciesOutput(hostEndpoint, policies, sets))
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToFetchPoliciesOutput(hostEndpointPolicy))
 }
