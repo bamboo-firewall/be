@@ -190,6 +190,9 @@ func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, set
 				if !selSource.Evaluate(set.Metadata.Labels) {
 					continue
 				}
+				if rule.IPVersion != set.Metadata.IPVersion {
+					continue
+				}
 				srcGNSSetNames = append(srcGNSSetNames, set.Metadata.Name)
 				if _, ok := parsedSetsMap[set.UUID]; !ok {
 					parsedSetsMap[set.UUID] = struct{}{}
@@ -204,14 +207,14 @@ func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, set
 	if len(rule.Source.Nets) > 0 {
 		srcNets = rule.Source.Nets
 		isSrcNetNegative = false
-	} else {
+	} else if len(rule.Source.Nets) > 0 {
 		srcNets = rule.Source.NotNets
 		isSrcNetNegative = true
 	}
 	if len(rule.Source.Ports) > 0 {
 		srcPorts = convertPorts(rule.Source.Ports)
 		isSrcPortNegative = false
-	} else {
+	} else if len(rule.Source.NotPorts) > 0 {
 		srcPorts = convertPorts(rule.Source.NotPorts)
 		isSrcPortNegative = true
 	}
@@ -228,6 +231,9 @@ func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, set
 				if !selDst.Evaluate(set.Metadata.Labels) {
 					continue
 				}
+				if rule.IPVersion != set.Metadata.IPVersion {
+					continue
+				}
 				dstGNSSetNames = append(dstGNSSetNames, set.Metadata.Name)
 				if _, ok := parsedSetsMap[set.UUID]; !ok {
 					parsedSetsMap[set.UUID] = struct{}{}
@@ -242,14 +248,14 @@ func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, set
 	if len(rule.Destination.Nets) > 0 {
 		dstNets = rule.Destination.Nets
 		isDstNetNegative = false
-	} else {
+	} else if len(rule.Destination.NotNets) > 0 {
 		dstNets = rule.Destination.NotNets
 		isDstNetNegative = true
 	}
 	if len(rule.Destination.Ports) > 0 {
 		dstPorts = convertPorts(rule.Destination.Ports)
 		isDstPortNegative = false
-	} else {
+	} else if len(rule.Destination.NotPorts) > 0 {
 		dstPorts = convertPorts(rule.Destination.NotPorts)
 		isDstPortNegative = true
 	}

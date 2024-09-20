@@ -23,7 +23,7 @@ type HostEndpointMetadata struct {
 }
 
 type HostEndpointSpec struct {
-	InterfaceName string                 `bson:"interfaceName"`
+	InterfaceName string                 `bson:"interface_name"`
 	IPs           []string               `bson:"ips"`
 	Ports         []HostEndpointSpecPort `bson:"ports"`
 }

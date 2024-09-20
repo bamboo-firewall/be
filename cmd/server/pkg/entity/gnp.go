@@ -13,8 +13,8 @@ type GlobalNetworkPolicy struct {
 	Metadata    GNPMetadata        `bson:"metadata"`
 	Spec        GNPSpec            `bson:"spec"`
 	Description string             `bson:"description"`
-	CreatedAt   time.Time          `bson:"createdAt"`
-	UpdatedAt   time.Time          `bson:"updatedAt"`
+	CreatedAt   time.Time          `bson:"created_at"`
+	UpdatedAt   time.Time          `bson:"updated_at"`
 }
 
 type GNPMetadata struct {
@@ -32,7 +32,7 @@ type GNPSpec struct {
 type GNPSpecRule struct {
 	Metadata    map[string]string `bson:"metadata"`
 	Action      string            `bson:"action"`
-	IPVersion   int               `bson:"ipVersion"`
+	IPVersion   int               `bson:"ip_version"`
 	Protocol    string            `bson:"protocol"`
 	NotProtocol string            `bson:"not_protocol"`
 	Source      GNPSpecRuleEntity `bson:"source"`
