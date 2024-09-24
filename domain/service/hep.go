@@ -15,6 +15,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/selector"
 	"github.com/bamboo-firewall/be/domain/model"
@@ -37,15 +38,7 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 		return nil, httpbase.ErrDatabase(ctx, "get host endpoint failed").SetSubError(coreErr)
 	}
 
-	var ports []entity.HostEndpointSpecPort
-	for _, port := range input.Spec.Ports {
-		ports = append(ports, entity.HostEndpointSpecPort{
-			Name:     port.Name,
-			Port:     port.Port,
-			Protocol: port.Protocol,
-		})
-	}
-
+	ipsV4, ipsV6 := exactIPs(input.Spec.IPs)
 	hepEntity := &entity.HostEndpoint{
 		ID:      primitive.NewObjectID(),
 		UUID:    uuid.New().String(),
@@ -57,13 +50,14 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 		Spec: entity.HostEndpointSpec{
 			InterfaceName: input.Spec.InterfaceName,
 			IPs:           input.Spec.IPs,
-			Ports:         ports,
+			IPsV4:         ipsV4,
+			IPsV6:         ipsV6,
 		},
 		Description: input.Description,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if !errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
+	if hepExisted != nil {
 		hepEntity.ID = hepExisted.ID
 		hepEntity.UUID = hepExisted.UUID
 		hepEntity.Version = hepExisted.Version + 1
@@ -71,45 +65,71 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 	}
 
 	if coreErr = ds.storage.UpsertHostEndpoint(ctx, hepEntity); coreErr != nil {
-		return nil, httpbase.ErrDatabase(ctx, "Create host endpoint failed").SetSubError(coreErr)
+		return nil, httpbase.ErrDatabase(ctx, "create host endpoint failed").SetSubError(coreErr)
 	}
 	return hepEntity, nil
 }
 
+func exactIPs(ips []string) (ipsV4, ipsV6 []string) {
+	for _, ipString := range ips {
+		ip := net.ParseIP(ipString)
+		if ip == nil {
+			slog.Warn("malformed ip", "ip", ipString)
+			continue
+		}
+		if ip.Version() == int(entity.IPVersion4) {
+			ipsV4 = append(ipsV4, ip.String())
+		} else if ip.Version() == int(entity.IPVersion6) {
+			ipsV6 = append(ipsV6, ip.String())
+		}
+	}
+	return
+}
+
 func (ds *hep) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteHostEndpointByName(ctx, name); coreErr != nil {
-		return httpbase.ErrDatabase(ctx, "Delete host endpoint failed").SetSubError(coreErr)
+		return httpbase.ErrDatabase(ctx, "delete host endpoint failed").SetSubError(coreErr)
 	}
 	return nil
 }
 
-func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchPoliciesInput) (*model.HostEndPointPolicy, *ierror.Error) {
+func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchHostEndpointPolicyInput) (*model.HostEndPointPolicy, *ierror.Error) {
 	hepEntity, coreErr := ds.storage.GetHostEndpointByName(ctx, input.Name)
 	if coreErr != nil {
 		if errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
-			return nil, httpbase.ErrNotFound(ctx, "NotFound").SetSubError(coreErr)
+			return nil, httpbase.ErrNotFound(ctx, "not found").SetSubError(coreErr)
 		}
-		return nil, httpbase.ErrDatabase(ctx, "Get host endpoint failed").SetSubError(coreErr)
+		return nil, httpbase.ErrDatabase(ctx, "get host endpoint failed").SetSubError(coreErr)
 	}
 
-	policies, err := ds.storage.ListGNP(ctx)
-	if err != nil {
-		return nil, httpbase.ErrDatabase(ctx, "List policies failed").SetSubError(coreErr)
+	heps, coreErr := ds.storage.ListHostEndpoints(ctx)
+	if coreErr != nil {
+		return nil, httpbase.ErrDatabase(ctx, "list host endpoint failed").SetSubError(coreErr)
 	}
 
-	sets, err := ds.storage.ListGNS(ctx)
+	gnps, err := ds.storage.ListGNP(ctx)
 	if err != nil {
-		return nil, httpbase.ErrDatabase(ctx, "List sets failed").SetSubError(coreErr)
+		return nil, httpbase.ErrDatabase(ctx, "list global network policy failed").SetSubError(coreErr)
+	}
+
+	gnss, err := ds.storage.ListGNS(ctx)
+	if err != nil {
+		return nil, httpbase.ErrDatabase(ctx, "list global network set failed").SetSubError(coreErr)
 	}
 
 	var (
-		parsedPolicies []*model.ParsedPolicy
-		parsedSets     []*model.ParsedSet
+		parsedGNPs  []*model.ParsedGNP
+		gnpVersions = make(map[string]uint)
 	)
-	parsedSetsMap := make(map[string]struct{})
-	gnpVersions := make(map[string]uint)
-	gnsVersions := make(map[string]uint)
-	for _, policy := range policies {
+
+	rp := &ruleParser{
+		parsedHEPsMap: make(map[string]struct{}),
+		hepVersions:   make(map[string]uint),
+		parsedGNSsMap: make(map[string]struct{}),
+		gnsVersions:   make(map[string]uint),
+	}
+
+	for _, policy := range gnps {
 		sel, errParse := selector.Parse(policy.Spec.Selector)
 		if errParse != nil {
 			slog.Warn("malformed selector", "policy_uuid", policy.UUID, "selector", policy.Spec.Selector, "err", errParse)
@@ -123,16 +143,12 @@ func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchPoliciesInpu
 		inboundRules := make([]*model.ParsedRule, 0)
 		outboundRules := make([]*model.ParsedRule, 0)
 		for _, rule := range policy.Spec.Ingress {
-			parsedRule, parsedSetsPerRule := parseRule(policy, &rule, sets, parsedSetsMap, gnsVersions)
-			inboundRules = append(inboundRules, parsedRule)
-			parsedSets = append(parsedSets, parsedSetsPerRule...)
+			inboundRules = append(inboundRules, rp.parseRule(policy, &rule, heps, gnss))
 		}
 		for _, rule := range policy.Spec.Egress {
-			parsedRule, parsedSetsPerRule := parseRule(policy, &rule, sets, parsedSetsMap, gnsVersions)
-			outboundRules = append(outboundRules, parsedRule)
-			parsedSets = append(parsedSets, parsedSetsPerRule...)
+			outboundRules = append(outboundRules, rp.parseRule(policy, &rule, heps, gnss))
 		}
-		parsedPolicies = append(parsedPolicies, &model.ParsedPolicy{
+		parsedGNPs = append(parsedGNPs, &model.ParsedGNP{
 			UUID:          policy.UUID,
 			Version:       policy.Version,
 			Name:          policy.Metadata.Name,
@@ -143,32 +159,42 @@ func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchPoliciesInpu
 
 	return &model.HostEndPointPolicy{
 		MetaData: model.HostEndPointPolicyMetadata{
-			HEPVersion:  hepEntity.Version,
 			GNPVersions: gnpVersions,
-			GNSVersions: gnsVersions,
+			HEPVersions: rp.hepVersions,
+			GNSVersions: rp.gnsVersions,
 		},
-		HEP:            hepEntity,
-		ParsedPolicies: parsedPolicies,
-		ParsedSets:     parsedSets,
+		HEP:        hepEntity,
+		ParsedGNPs: parsedGNPs,
+		ParsedHEPs: rp.parsedHEPs,
+		ParsedGNSs: rp.parsedGNSs,
 	}, nil
 }
 
-func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, sets []*entity.GlobalNetworkSet,
-	parsedSetsMap map[string]struct{}, gnsVersions map[string]uint) (*model.ParsedRule, []*model.ParsedSet) {
+type ruleParser struct {
+	parsedHEPs    []*model.ParsedHEP
+	parsedHEPsMap map[string]struct{}
+	hepVersions   map[string]uint
+	parsedGNSs    []*model.ParsedGNS
+	parsedGNSsMap map[string]struct{}
+	gnsVersions   map[string]uint
+}
+
+func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, heps []*entity.HostEndpoint, gnss []*entity.GlobalNetworkSet) *model.ParsedRule {
 	var (
 		protocol           string
 		isProtocolNegative bool
-		srcGNSSetNames     []string
+		srcGNSUUIDs        []string
+		srcHEPUUIDs        []string
 		srcNets            []string
 		isSrcNetNegative   bool
 		srcPorts           []string
 		isSrcPortNegative  bool
-		dstGNSSetNames     []string
+		dstGNSUUIDs        []string
+		dstHEPUUIDs        []string
 		dstNets            []string
 		isDstNetNegative   bool
 		dstPorts           []string
 		isDstPortNegative  bool
-		parsedSets         []*model.ParsedSet
 	)
 	if rule.Protocol != "" {
 		protocol = rule.Protocol
@@ -178,110 +204,153 @@ func parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, set
 		isProtocolNegative = true
 	}
 
-	// get sets match if selector is available
-	if len(rule.Source.Selector) > 0 {
-		for {
-			selSource, errParseSource := selector.Parse(rule.Source.Selector)
-			if errParseSource != nil {
-				slog.Warn("malformed selector in source", "policy_uuid", policy.UUID, "selector", rule.Source.Selector, "err", errParseSource)
+	// get global network set match if selector is available
+	if rule.Source != nil {
+		if len(rule.Source.Selector) > 0 {
+			for {
+				selSource, errParseSource := selector.Parse(rule.Source.Selector)
+				if errParseSource != nil {
+					slog.Warn("malformed selector in source", "policy_uuid", policy.UUID, "selector", rule.Source.Selector, "err", errParseSource)
+					break
+				}
+				for _, ep := range heps {
+					if !selSource.Evaluate(ep.Metadata.Labels) {
+						continue
+					}
+					if !((rule.IPVersion == entity.IPVersion4 && len(ep.Spec.IPsV4) > 0) || (rule.IPVersion == entity.IPVersion6 && len(ep.Spec.IPsV6) > 0)) {
+						continue
+					}
+					srcHEPUUIDs = append(srcHEPUUIDs, ep.UUID)
+					if _, ok := r.parsedHEPsMap[ep.UUID]; !ok {
+						r.parsedHEPsMap[ep.UUID] = struct{}{}
+						r.hepVersions[ep.UUID] = ep.Version
+						r.parsedHEPs = append(r.parsedHEPs, entityToParsedHEP(ep))
+					}
+				}
+				for _, set := range gnss {
+					if !selSource.Evaluate(set.Metadata.Labels) {
+						continue
+					}
+					if !((rule.IPVersion == entity.IPVersion4 && len(set.Spec.NetsV4) > 0) || (rule.IPVersion == entity.IPVersion6 && len(set.Spec.NetsV6) > 0)) {
+						continue
+					}
+					srcGNSUUIDs = append(srcGNSUUIDs, set.UUID)
+					if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
+						r.parsedGNSsMap[set.UUID] = struct{}{}
+						r.gnsVersions[set.UUID] = set.Version
+						r.parsedGNSs = append(r.parsedGNSs, entityToParsedGNS(set))
+					}
+				}
 				break
 			}
-			for _, set := range sets {
-				if !selSource.Evaluate(set.Metadata.Labels) {
-					continue
-				}
-				if rule.IPVersion != set.Metadata.IPVersion {
-					continue
-				}
-				srcGNSSetNames = append(srcGNSSetNames, set.Metadata.Name)
-				if _, ok := parsedSetsMap[set.UUID]; !ok {
-					parsedSetsMap[set.UUID] = struct{}{}
-					gnsVersions[set.UUID] = set.Version
-					parsedSets = append(parsedSets, entityToParsedSet(set))
-				}
-			}
-			break
+		}
+
+		if len(rule.Source.Nets) > 0 {
+			srcNets = rule.Source.Nets
+			isSrcNetNegative = false
+		} else if len(rule.Source.Nets) > 0 {
+			srcNets = rule.Source.NotNets
+			isSrcNetNegative = true
+		}
+		if len(rule.Source.Ports) > 0 {
+			srcPorts = convertPorts(rule.Source.Ports)
+			isSrcPortNegative = false
+		} else if len(rule.Source.NotPorts) > 0 {
+			srcPorts = convertPorts(rule.Source.NotPorts)
+			isSrcPortNegative = true
 		}
 	}
-
-	if len(rule.Source.Nets) > 0 {
-		srcNets = rule.Source.Nets
-		isSrcNetNegative = false
-	} else if len(rule.Source.Nets) > 0 {
-		srcNets = rule.Source.NotNets
-		isSrcNetNegative = true
-	}
-	if len(rule.Source.Ports) > 0 {
-		srcPorts = convertPorts(rule.Source.Ports)
-		isSrcPortNegative = false
-	} else if len(rule.Source.NotPorts) > 0 {
-		srcPorts = convertPorts(rule.Source.NotPorts)
-		isSrcPortNegative = true
-	}
-
-	// get sets match if selector is available
-	if len(rule.Destination.Selector) > 0 {
-		for {
-			selDst, errParseDst := selector.Parse(rule.Destination.Selector)
-			if errParseDst != nil {
-				slog.Warn("malformed selector in destination", "policy_uuid", policy.UUID, "selector", rule.Source.Selector, "err", errParseDst)
+	// get global network set match if selector is available
+	if rule.Destination != nil {
+		if len(rule.Destination.Selector) > 0 {
+			for {
+				selDst, errParseDst := selector.Parse(rule.Destination.Selector)
+				if errParseDst != nil {
+					slog.Warn("malformed selector in destination", "policy_uuid", policy.UUID, "selector", rule.Source.Selector, "err", errParseDst)
+					break
+				}
+				for _, ep := range heps {
+					if !selDst.Evaluate(ep.Metadata.Labels) {
+						continue
+					}
+					if !((rule.IPVersion == entity.IPVersion4 && len(ep.Spec.IPsV4) > 0) || (rule.IPVersion == entity.IPVersion6 && len(ep.Spec.IPsV6) > 0)) {
+						continue
+					}
+					dstHEPUUIDs = append(dstHEPUUIDs, ep.UUID)
+					if _, ok := r.parsedHEPsMap[ep.UUID]; !ok {
+						r.parsedHEPsMap[ep.UUID] = struct{}{}
+						r.hepVersions[ep.UUID] = ep.Version
+						r.parsedHEPs = append(r.parsedHEPs, entityToParsedHEP(ep))
+					}
+				}
+				for _, set := range gnss {
+					if !selDst.Evaluate(set.Metadata.Labels) {
+						continue
+					}
+					if !((rule.IPVersion == entity.IPVersion4 && len(set.Spec.NetsV4) > 0) || (rule.IPVersion == entity.IPVersion6 && len(set.Spec.NetsV6) > 0)) {
+						continue
+					}
+					dstGNSUUIDs = append(dstGNSUUIDs, set.Metadata.Name)
+					if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
+						r.parsedGNSsMap[set.UUID] = struct{}{}
+						r.gnsVersions[set.UUID] = set.Version
+						r.parsedGNSs = append(r.parsedGNSs, entityToParsedGNS(set))
+					}
+				}
 				break
 			}
-			for _, set := range sets {
-				if !selDst.Evaluate(set.Metadata.Labels) {
-					continue
-				}
-				if rule.IPVersion != set.Metadata.IPVersion {
-					continue
-				}
-				dstGNSSetNames = append(dstGNSSetNames, set.Metadata.Name)
-				if _, ok := parsedSetsMap[set.UUID]; !ok {
-					parsedSetsMap[set.UUID] = struct{}{}
-					gnsVersions[set.UUID] = set.Version
-					parsedSets = append(parsedSets, entityToParsedSet(set))
-				}
-			}
-			break
 		}
-	}
 
-	if len(rule.Destination.Nets) > 0 {
-		dstNets = rule.Destination.Nets
-		isDstNetNegative = false
-	} else if len(rule.Destination.NotNets) > 0 {
-		dstNets = rule.Destination.NotNets
-		isDstNetNegative = true
-	}
-	if len(rule.Destination.Ports) > 0 {
-		dstPorts = convertPorts(rule.Destination.Ports)
-		isDstPortNegative = false
-	} else if len(rule.Destination.NotPorts) > 0 {
-		dstPorts = convertPorts(rule.Destination.NotPorts)
-		isDstPortNegative = true
+		if len(rule.Destination.Nets) > 0 {
+			dstNets = rule.Destination.Nets
+			isDstNetNegative = false
+		} else if len(rule.Destination.NotNets) > 0 {
+			dstNets = rule.Destination.NotNets
+			isDstNetNegative = true
+		}
+		if len(rule.Destination.Ports) > 0 {
+			dstPorts = convertPorts(rule.Destination.Ports)
+			isDstPortNegative = false
+		} else if len(rule.Destination.NotPorts) > 0 {
+			dstPorts = convertPorts(rule.Destination.NotPorts)
+			isDstPortNegative = true
+		}
 	}
 	return &model.ParsedRule{
 		Action:             rule.Action,
-		IPVersion:          rule.IPVersion,
+		IPVersion:          int(rule.IPVersion),
 		Protocol:           protocol,
 		IsProtocolNegative: isProtocolNegative,
-		SrcGNSNetNames:     srcGNSSetNames,
+		SrcGNSUUIDs:        srcGNSUUIDs,
+		SrcHEPUUIDs:        srcHEPUUIDs,
 		SrcNets:            srcNets,
 		IsSrcNetNegative:   isSrcNetNegative,
 		SrcPorts:           srcPorts,
 		IsSrcPortNegative:  isSrcPortNegative,
-		DstGNSNetNames:     dstGNSSetNames,
+		DstGNSUUIDs:        dstGNSUUIDs,
+		DstHEPUUIDs:        dstHEPUUIDs,
 		DstNets:            dstNets,
 		IsDstNetNegative:   isDstNetNegative,
 		DstPorts:           dstPorts,
 		IsDstPortNegative:  isDstPortNegative,
-	}, parsedSets
+	}
 }
 
-func entityToParsedSet(set *entity.GlobalNetworkSet) *model.ParsedSet {
-	return &model.ParsedSet{
-		Name:      set.Metadata.Name,
-		IPVersion: set.Metadata.IPVersion,
-		Nets:      set.Spec.Nets,
+func entityToParsedHEP(hep *entity.HostEndpoint) *model.ParsedHEP {
+	return &model.ParsedHEP{
+		UUID:  hep.UUID,
+		Name:  hep.Metadata.Name,
+		IPsV4: hep.Spec.IPsV4,
+		IPsV6: hep.Spec.IPsV6,
+	}
+}
+
+func entityToParsedGNS(set *entity.GlobalNetworkSet) *model.ParsedGNS {
+	return &model.ParsedGNS{
+		UUID:   set.UUID,
+		Name:   set.Metadata.Name,
+		NetsV4: set.Spec.NetsV4,
+		NetsV6: set.Spec.NetsV6,
 	}
 }
 

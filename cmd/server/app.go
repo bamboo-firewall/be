@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/validator"
 	"github.com/bamboo-firewall/be/cmd/server/route"
 	"github.com/bamboo-firewall/be/config"
 )
@@ -28,14 +30,20 @@ func NewApp(cfg config.Config) (App, error) {
 		return nil, err
 	}
 
+	validator.Init()
+
 	router := route.RegisterHandler(repository.NewPolicy(policy))
 	return &app{
-		httpServer: httpbase.NewServer(router, httpbase.ConfigTimeout{
-			ReadTimeout:       cfg.HTTPServerReadTimeout,
-			ReadHeaderTimeout: cfg.HTTPServerReadHeaderTimeout,
-			WriteTimeout:      cfg.HTTPServerWriteTimeout,
-			IdleTimeout:       cfg.HTTPServerIdleTimeout,
-		}),
+		httpServer: httpbase.NewServer(
+			fmt.Sprintf("%s:%s", cfg.HTTPServerHost, cfg.HTTPServerPort),
+			router,
+			httpbase.ConfigTimeout{
+				ReadTimeout:       cfg.HTTPServerReadTimeout,
+				ReadHeaderTimeout: cfg.HTTPServerReadHeaderTimeout,
+				WriteTimeout:      cfg.HTTPServerWriteTimeout,
+				IdleTimeout:       cfg.HTTPServerIdleTimeout,
+			},
+		),
 		policyDB: policy,
 	}, nil
 }

@@ -25,7 +25,7 @@ type Server struct {
 	server *http.Server
 }
 
-func NewServer(mux http.Handler, cfg ConfigTimeout, opts ...serverOption) *Server {
+func NewServer(addr string, mux http.Handler, cfg ConfigTimeout, opts ...serverOption) *Server {
 	if cfg.ReadTimeout <= 0 {
 		cfg.ReadTimeout = defaultReadTimeout
 	}
@@ -39,7 +39,7 @@ func NewServer(mux http.Handler, cfg ConfigTimeout, opts ...serverOption) *Serve
 		cfg.IdleTimeout = defaultIdleTimeout
 	}
 	httpServer := &http.Server{
-		Addr:              ":8080",
+		Addr:              addr,
 		Handler:           mux,
 		ReadTimeout:       cfg.ReadTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,

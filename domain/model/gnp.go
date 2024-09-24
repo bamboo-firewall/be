@@ -13,7 +13,6 @@ type GNPMetadataInput struct {
 
 type GNPSpecInput struct {
 	Selector string
-	Types    []string
 	Ingress  []GNPSpecRuleInput
 	Egress   []GNPSpecRuleInput
 }
@@ -24,8 +23,8 @@ type GNPSpecRuleInput struct {
 	Protocol    string
 	NotProtocol string
 	IPVersion   int
-	Source      GNPSpecRuleEntityInput
-	Destination GNPSpecRuleEntityInput
+	Source      *GNPSpecRuleEntityInput
+	Destination *GNPSpecRuleEntityInput
 }
 
 type GNPSpecRuleEntityInput struct {

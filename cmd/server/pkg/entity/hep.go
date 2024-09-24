@@ -23,15 +23,10 @@ type HostEndpointMetadata struct {
 }
 
 type HostEndpointSpec struct {
-	InterfaceName string                 `bson:"interface_name"`
-	IPs           []string               `bson:"ips"`
-	Ports         []HostEndpointSpecPort `bson:"ports"`
-}
-
-type HostEndpointSpecPort struct {
-	Name     string `bson:"name"`
-	Port     int    `bson:"port"`
-	Protocol string `bson:"protocol"`
+	InterfaceName string   `bson:"interface_name"`
+	IPs           []string `bson:"ips"`
+	IPsV4         []string `bson:"ips_v4"`
+	IPsV6         []string `bson:"ips_v6"`
 }
 
 func (HostEndpoint) CollectionName() string {

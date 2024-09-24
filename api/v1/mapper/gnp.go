@@ -30,7 +30,6 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 		},
 		Spec: dto.GNPSpec{
 			Selector: gnp.Spec.Selector,
-			Types:    gnp.Spec.Types,
 			Ingress:  specIngress,
 			Egress:   specEgress,
 		},
@@ -46,21 +45,22 @@ func toRuleDTO(rule entity.GNPSpecRule) dto.GNPSpecRule {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
-		IPVersion:   rule.IPVersion,
-		Source: dto.GNPSpecRuleEntity{
-			Selector: rule.Source.Selector,
-			Nets:     rule.Source.Nets,
-			NotNets:  rule.Source.NotNets,
-			Ports:    rule.Source.Ports,
-			NotPorts: rule.Source.NotPorts,
-		},
-		Destination: dto.GNPSpecRuleEntity{
-			Selector: rule.Destination.Selector,
-			Nets:     rule.Destination.Nets,
-			NotNets:  rule.Destination.NotNets,
-			Ports:    rule.Destination.Ports,
-			NotPorts: rule.Destination.NotPorts,
-		},
+		IPVersion:   int(rule.IPVersion),
+		Source:      toRuleEntityDTO(rule.Source),
+		Destination: toRuleEntityDTO(rule.Destination),
+	}
+}
+
+func toRuleEntityDTO(ruleEntity *entity.GNPSpecRuleEntity) *dto.GNPSpecRuleEntity {
+	if ruleEntity == nil {
+		return nil
+	}
+	return &dto.GNPSpecRuleEntity{
+		Selector: ruleEntity.Selector,
+		Nets:     ruleEntity.Nets,
+		NotNets:  ruleEntity.NotNets,
+		Ports:    ruleEntity.Ports,
+		NotPorts: ruleEntity.NotPorts,
 	}
 }
 
@@ -82,7 +82,6 @@ func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *m
 		},
 		Spec: model.GNPSpecInput{
 			Selector: in.Spec.Selector,
-			Types:    in.Spec.Types,
 			Ingress:  specIngress,
 			Egress:   specEgress,
 		},
@@ -97,19 +96,20 @@ func toRuleInput(rule dto.GNPSpecRuleInput) model.GNPSpecRuleInput {
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
 		IPVersion:   rule.IPVersion,
-		Source: model.GNPSpecRuleEntityInput{
-			Selector: rule.Source.Selector,
-			Nets:     rule.Source.Nets,
-			NotNets:  rule.Source.NotNets,
-			Ports:    rule.Source.Ports,
-			NotPorts: rule.Source.NotPorts,
-		},
-		Destination: model.GNPSpecRuleEntityInput{
-			Selector: rule.Destination.Selector,
-			Nets:     rule.Destination.Nets,
-			NotNets:  rule.Destination.NotNets,
-			Ports:    rule.Destination.Ports,
-			NotPorts: rule.Destination.NotPorts,
-		},
+		Source:      toRuleEntityInput(rule.Source),
+		Destination: toRuleEntityInput(rule.Destination),
+	}
+}
+
+func toRuleEntityInput(ruleEntity *dto.GNPSpecRuleEntityInput) *model.GNPSpecRuleEntityInput {
+	if ruleEntity == nil {
+		return nil
+	}
+	return &model.GNPSpecRuleEntityInput{
+		Selector: ruleEntity.Selector,
+		Nets:     ruleEntity.Nets,
+		NotNets:  ruleEntity.NotNets,
+		Ports:    ruleEntity.Ports,
+		NotPorts: ruleEntity.NotPorts,
 	}
 }

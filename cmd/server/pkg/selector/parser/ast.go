@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -18,42 +17,8 @@ func (m MapAsLabels) Get(labelName string) (value string, present bool) {
 	return
 }
 
-type Visitor interface {
-	Visit(n interface{})
-}
-
-// PrefixVisitor implements the Visitor interface to allow prefixing of
-// label names within a selector.
-type PrefixVisitor struct {
-	Prefix string
-}
-
-// Visit add prefix to label name
-func (v PrefixVisitor) Visit(n interface{}) {
-	switch np := n.(type) {
-	case *LabelEqValueNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelNeValueNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelContainsValueNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelStartsWithValueNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelEndsWithValueNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *HasNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelInSetNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	case *LabelNotInSetNode:
-		np.LabelName = fmt.Sprintf("%s%s", v.Prefix, np.LabelName)
-	default:
-	}
-}
-
 type node interface {
 	Evaluate(labels Labels) bool
-	AcceptVisitor(visitor Visitor)
 	collectFragments(fragments []string) []string
 }
 
@@ -68,10 +33,6 @@ func (r *selectorRoot) EvaluateLabels(labels Labels) bool {
 
 func (r *selectorRoot) Evaluate(labels map[string]string) bool {
 	return r.EvaluateLabels(MapAsLabels(labels))
-}
-
-func (r *selectorRoot) AcceptVisitor(v Visitor) {
-	r.root.AcceptVisitor(v)
 }
 
 func (r *selectorRoot) String() string {
@@ -96,10 +57,6 @@ func (node *LabelEqValueNode) Evaluate(labels Labels) bool {
 	return val == node.Value
 }
 
-func (node *LabelEqValueNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-}
-
 func (node *LabelEqValueNode) collectFragments(fragments []string) []string {
 	return appendLabelOpAndQuotedString(fragments, node.LabelName, " == ", node.Value)
 }
@@ -115,10 +72,6 @@ func (node *LabelContainsValueNode) Evaluate(labels Labels) bool {
 		return false
 	}
 	return strings.Contains(val, node.Value)
-}
-
-func (node *LabelContainsValueNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
 }
 
 func (node *LabelContainsValueNode) collectFragments(fragments []string) []string {
@@ -138,10 +91,6 @@ func (node *LabelStartsWithValueNode) Evaluate(labels Labels) bool {
 	return false
 }
 
-func (node *LabelStartsWithValueNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-}
-
 func (node *LabelStartsWithValueNode) collectFragments(fragments []string) []string {
 	return appendLabelOpAndQuotedString(fragments, node.LabelName, " starts with ", node.Value)
 }
@@ -159,10 +108,6 @@ func (node *LabelEndsWithValueNode) Evaluate(labels Labels) bool {
 	return false
 }
 
-func (node *LabelEndsWithValueNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-}
-
 func (node *LabelEndsWithValueNode) collectFragments(fragments []string) []string {
 	return appendLabelOpAndQuotedString(fragments, node.LabelName, " ends with ", node.Value)
 }
@@ -178,10 +123,6 @@ func (node *LabelNeValueNode) Evaluate(labels Labels) bool {
 		return val != node.Value
 	}
 	return true
-}
-
-func (node *LabelNeValueNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
 }
 
 func (node *LabelNeValueNode) collectFragments(fragments []string) []string {
@@ -211,10 +152,6 @@ func (node *LabelInSetNode) Evaluate(labels Labels) bool {
 	return false
 }
 
-func (node *LabelInSetNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-}
-
 func (node *LabelInSetNode) collectFragments(fragments []string) []string {
 	return collectInOpFragments(fragments, node.LabelName, "in", node.Value)
 }
@@ -222,10 +159,6 @@ func (node *LabelInSetNode) collectFragments(fragments []string) []string {
 type LabelNotInSetNode struct {
 	LabelName string
 	Value     StringSet
-}
-
-func (node *LabelNotInSetNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
 }
 
 func (node *LabelNotInSetNode) Evaluate(labels Labels) bool {
@@ -259,7 +192,6 @@ func collectInOpFragments(fragments []string, labelName, op string, values Strin
 	}
 	fragments = append(fragments, "}")
 	return fragments
-
 }
 
 type HasNode struct {
@@ -274,10 +206,6 @@ func (node *HasNode) Evaluate(labels Labels) bool {
 	return false
 }
 
-func (node *HasNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-}
-
 func (node *HasNode) collectFragments(fragments []string) []string {
 	return append(fragments, "has(", node.LabelName, ")")
 }
@@ -288,11 +216,6 @@ type NotNode struct {
 
 func (node *NotNode) Evaluate(labels Labels) bool {
 	return !node.Operand.Evaluate(labels)
-}
-
-func (node *NotNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-	node.Operand.AcceptVisitor(v)
 }
 
 func (node *NotNode) collectFragments(fragments []string) []string {
@@ -311,13 +234,6 @@ func (node *AndNode) Evaluate(labels Labels) bool {
 		}
 	}
 	return true
-}
-
-func (node *AndNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-	for _, op := range node.Operands {
-		op.AcceptVisitor(v)
-	}
 }
 
 func (node *AndNode) collectFragments(fragments []string) []string {
@@ -344,13 +260,6 @@ func (node *OrNode) Evaluate(labels Labels) bool {
 	return false
 }
 
-func (node *OrNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
-	for _, op := range node.Operands {
-		op.AcceptVisitor(v)
-	}
-}
-
 func (node *OrNode) collectFragments(fragments []string) []string {
 	fragments = append(fragments, "(")
 	fragments = node.Operands[0].collectFragments(fragments)
@@ -365,12 +274,8 @@ func (node *OrNode) collectFragments(fragments []string) []string {
 type AllNode struct {
 }
 
-func (node *AllNode) Evaluate(labels Labels) bool {
+func (node *AllNode) Evaluate(Labels) bool {
 	return true
-}
-
-func (node *AllNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
 }
 
 func (node *AllNode) collectFragments(fragments []string) []string {
@@ -382,10 +287,6 @@ type GlobalNode struct {
 
 func (node *GlobalNode) Evaluate(labels Labels) bool {
 	return true
-}
-
-func (node *GlobalNode) AcceptVisitor(v Visitor) {
-	v.Visit(node)
 }
 
 func (node *GlobalNode) collectFragments(fragments []string) []string {

@@ -21,15 +21,8 @@ type HostEndpointMetadata struct {
 }
 
 type HostEndpointSpec struct {
-	InterfaceName string                 `json:"interfaceName" yaml:"interfaceName"`
-	IPs           []string               `json:"ips" yaml:"ips"`
-	Ports         []HostEndpointSpecPort `json:"ports" yaml:"ports"`
-}
-
-type HostEndpointSpecPort struct {
-	Name     string `json:"name" yaml:"name"`
-	Port     int    `json:"port" yaml:"port"`
-	Protocol string `json:"protocol" yaml:"protocol"`
+	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
+	IPs           []string `json:"ips" yaml:"ips"`
 }
 
 type CreateHostEndpointInput struct {
@@ -39,44 +32,38 @@ type CreateHostEndpointInput struct {
 }
 
 type HostEndpointMetadataInput struct {
-	Name   string            `json:"name" yaml:"name" validate:"required"`
+	Name   string            `json:"name" yaml:"name" validate:"required,name"`
 	Labels map[string]string `json:"labels" yaml:"labels"`
 }
 
 type HostEndpointSpecInput struct {
-	InterfaceName string                      `json:"interfaceName" yaml:"interfaceName"`
-	IPs           []string                    `json:"ips" yaml:"ips"`
-	Ports         []HostEndpointSpecPortInput `json:"ports" yaml:"ports"`
-}
-
-type HostEndpointSpecPortInput struct {
-	Name     string `json:"name" yaml:"name"`
-	Port     int    `json:"port" yaml:"port"`
-	Protocol string `json:"protocol" yaml:"protocol"`
+	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
+	IPs           []string `json:"ips" yaml:"ips" validate:"min=1,unique,dive,ip"`
 }
 
 type DeleteHostEndpointInput struct {
 	Metadata HostEndpointMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
 }
 
-type FetchPoliciesInput struct {
+type FetchHostEndpointPolicyInput struct {
 	Name string `uri:"name" validate:"required"`
 }
 
-type FetchPoliciesOutput struct {
-	MetaData       HostEndPointPolicyMetadata `json:"metadata"`
-	HEP            *HostEndpoint              `json:"hostEndpoint"`
-	ParsedPolicies []*ParsedPolicy            `json:"parsedPolicies"`
-	ParsedSets     []*ParsedSet               `json:"parsedSets"`
+type HostEndpointPolicy struct {
+	MetaData   HostEndPointPolicyMetadata `json:"metadata"`
+	HEP        *HostEndpoint              `json:"hostEndpoint"`
+	ParsedGNPs []*ParsedGNP               `json:"parsedGNPs"`
+	ParsedHEPs []*ParsedHEP               `json:"parsedHEPs"`
+	ParsedGNSs []*ParsedGNS               `json:"parsedGNSs"`
 }
 
 type HostEndPointPolicyMetadata struct {
-	HEPVersion  uint            `json:"hepVersion"`
+	HEPVersions map[string]uint `json:"hepVersions"`
 	GNPVersions map[string]uint `json:"gnpVersions"`
 	GNSVersions map[string]uint `json:"gnsVersions"`
 }
 
-type ParsedPolicy struct {
+type ParsedGNP struct {
 	UUID          string        `json:"uuid"`
 	Version       uint          `json:"version"`
 	Name          string        `json:"name"`
@@ -91,18 +78,28 @@ type ParsedRule struct {
 	IsProtocolNegative bool     `json:"isProtocolNegative"`
 	SrcNets            []string `json:"srcNets"`
 	IsSrcNetNegative   bool     `json:"isSrcNetNegative"`
-	SrcGNSNetNames     []string `json:"srcGNSNetNames"`
+	SrcGNSUUIDs        []string `json:"srcGNSUUIDs"`
+	SrcHEPUUIDs        []string `json:"srcHEPUUIDs"`
 	SrcPorts           []string `json:"srcPorts"`
 	IsSrcPortNegative  bool     `json:"isSrcPortNegative"`
 	DstNets            []string `json:"dstNets"`
 	IsDstNetNegative   bool     `json:"isDstNetNegative"`
-	DstGNSNetNames     []string `json:"dstGNSNetNames"`
+	DstGNSUUIDs        []string `json:"dstGNSUUIDs"`
+	DstHEPUUIDs        []string `json:"dstHEPUUIDs"`
 	DstPorts           []string `json:"dstPorts"`
 	IsDstPortNegative  bool     `json:"isDstPortNegative"`
 }
 
-type ParsedSet struct {
-	Name      string   `json:"name"`
-	IPVersion int      `json:"ipVersion"`
-	Nets      []string `json:"nets"`
+type ParsedHEP struct {
+	UUID  string   `json:"uuid"`
+	Name  string   `json:"name"`
+	IPsV4 []string `json:"ipsV4"`
+	IPsV6 []string `json:"ipsV6"`
+}
+
+type ParsedGNS struct {
+	UUID   string   `json:"uuid"`
+	Name   string   `json:"name"`
+	NetsV4 []string `json:"netsV4"`
+	NetsV6 []string `json:"netsV6"`
 }

@@ -10,14 +10,6 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 	if hep == nil {
 		return nil
 	}
-	var ports []dto.HostEndpointSpecPort
-	for _, port := range hep.Spec.Ports {
-		ports = append(ports, dto.HostEndpointSpecPort{
-			Name:     port.Name,
-			Port:     port.Port,
-			Protocol: port.Protocol,
-		})
-	}
 	return &dto.HostEndpoint{
 		ID:      hep.ID.Hex(),
 		UUID:    hep.UUID,
@@ -29,7 +21,6 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 		Spec: dto.HostEndpointSpec{
 			InterfaceName: hep.Spec.InterfaceName,
 			IPs:           hep.Spec.IPs,
-			Ports:         ports,
 		},
 		Description: hep.Description,
 		CreatedAt:   hep.CreatedAt,
@@ -38,15 +29,6 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 }
 
 func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHostEndpointInput {
-	var ports []model.HostEndpointSpecPortInput
-	for _, port := range in.Spec.Ports {
-		ports = append(ports, model.HostEndpointSpecPortInput{
-			Name:     port.Name,
-			Port:     port.Port,
-			Protocol: port.Protocol,
-		})
-	}
-
 	return &model.CreateHostEndpointInput{
 		Metadata: model.HostEndpointMetadataInput{
 			Name:   in.Metadata.Name,
@@ -55,58 +37,62 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 		Spec: model.HostEndpointSpecInput{
 			InterfaceName: in.Spec.InterfaceName,
 			IPs:           in.Spec.IPs,
-			Ports:         ports,
 		},
 		Description: in.Description,
 	}
 }
 
-func ToFetchPoliciesInput(in *dto.FetchPoliciesInput) *model.FetchPoliciesInput {
-	return &model.FetchPoliciesInput{
+func ToFetchHostEndPointPolicyInput(in *dto.FetchHostEndpointPolicyInput) *model.FetchHostEndpointPolicyInput {
+	return &model.FetchHostEndpointPolicyInput{
 		Name: in.Name,
 	}
 }
 
-func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.FetchPoliciesOutput {
-	policiesDTOs := make([]*dto.ParsedPolicy, len(hostEndpointPolicy.ParsedPolicies))
-	for i, policy := range hostEndpointPolicy.ParsedPolicies {
-		policiesDTOs[i] = ToParsedPolicyDTO(policy)
+func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.HostEndpointPolicy {
+	parsedGNPDTOs := make([]*dto.ParsedGNP, len(hostEndpointPolicy.ParsedGNPs))
+	for i, policy := range hostEndpointPolicy.ParsedGNPs {
+		parsedGNPDTOs[i] = toParsedGNPDTO(policy)
 	}
-	setDTOs := make([]*dto.ParsedSet, len(hostEndpointPolicy.ParsedSets))
-	for i, set := range hostEndpointPolicy.ParsedSets {
-		setDTOs[i] = ToParsedSetDTO(set)
+	parsedHEPDTOs := make([]*dto.ParsedHEP, len(hostEndpointPolicy.ParsedHEPs))
+	for i, endpoint := range hostEndpointPolicy.ParsedHEPs {
+		parsedHEPDTOs[i] = toParsedHEPDTO(endpoint)
 	}
-	return &dto.FetchPoliciesOutput{
+	parsedGNSDTOs := make([]*dto.ParsedGNS, len(hostEndpointPolicy.ParsedGNSs))
+	for i, set := range hostEndpointPolicy.ParsedGNSs {
+		parsedGNSDTOs[i] = toParsedGNSDTO(set)
+	}
+	return &dto.HostEndpointPolicy{
 		MetaData: dto.HostEndPointPolicyMetadata{
-			HEPVersion:  hostEndpointPolicy.MetaData.HEPVersion,
+			HEPVersions: hostEndpointPolicy.MetaData.HEPVersions,
 			GNPVersions: hostEndpointPolicy.MetaData.GNPVersions,
 			GNSVersions: hostEndpointPolicy.MetaData.GNSVersions,
 		},
-		HEP:            ToHostEndpointDTO(hostEndpointPolicy.HEP),
-		ParsedPolicies: policiesDTOs,
-		ParsedSets:     setDTOs,
+		HEP:        ToHostEndpointDTO(hostEndpointPolicy.HEP),
+		ParsedGNPs: parsedGNPDTOs,
+		ParsedHEPs: parsedHEPDTOs,
+		ParsedGNSs: parsedGNSDTOs,
 	}
 }
 
-func ToParsedPolicyDTO(parsedPolicy *model.ParsedPolicy) *dto.ParsedPolicy {
+func toParsedGNPDTO(parsedGNP *model.ParsedGNP) *dto.ParsedGNP {
 	var inboundRules []*dto.ParsedRule
-	for _, rule := range parsedPolicy.InboundRules {
-		inboundRules = append(inboundRules, ToParsedRuleDTO(rule))
+	for _, rule := range parsedGNP.InboundRules {
+		inboundRules = append(inboundRules, toParsedRuleDTO(rule))
 	}
 	var outboundRules []*dto.ParsedRule
-	for _, rule := range parsedPolicy.OutboundRules {
-		outboundRules = append(outboundRules, ToParsedRuleDTO(rule))
+	for _, rule := range parsedGNP.OutboundRules {
+		outboundRules = append(outboundRules, toParsedRuleDTO(rule))
 	}
-	return &dto.ParsedPolicy{
-		UUID:          parsedPolicy.UUID,
-		Version:       parsedPolicy.Version,
-		Name:          parsedPolicy.Name,
+	return &dto.ParsedGNP{
+		UUID:          parsedGNP.UUID,
+		Version:       parsedGNP.Version,
+		Name:          parsedGNP.Name,
 		InboundRules:  inboundRules,
 		OutboundRules: outboundRules,
 	}
 }
 
-func ToParsedRuleDTO(parsedRule *model.ParsedRule) *dto.ParsedRule {
+func toParsedRuleDTO(parsedRule *model.ParsedRule) *dto.ParsedRule {
 	return &dto.ParsedRule{
 		Action:             parsedRule.Action,
 		IPVersion:          parsedRule.IPVersion,
@@ -114,21 +100,33 @@ func ToParsedRuleDTO(parsedRule *model.ParsedRule) *dto.ParsedRule {
 		IsProtocolNegative: parsedRule.IsProtocolNegative,
 		SrcNets:            parsedRule.SrcNets,
 		IsSrcNetNegative:   parsedRule.IsSrcNetNegative,
-		SrcGNSNetNames:     parsedRule.SrcGNSNetNames,
+		SrcGNSUUIDs:        parsedRule.SrcGNSUUIDs,
+		SrcHEPUUIDs:        parsedRule.SrcHEPUUIDs,
 		SrcPorts:           parsedRule.SrcPorts,
 		IsSrcPortNegative:  parsedRule.IsSrcPortNegative,
 		DstNets:            parsedRule.DstNets,
 		IsDstNetNegative:   parsedRule.IsDstPortNegative,
-		DstGNSNetNames:     parsedRule.DstGNSNetNames,
+		DstGNSUUIDs:        parsedRule.DstGNSUUIDs,
+		DstHEPUUIDs:        parsedRule.DstHEPUUIDs,
 		DstPorts:           parsedRule.DstPorts,
 		IsDstPortNegative:  parsedRule.IsDstPortNegative,
 	}
 }
 
-func ToParsedSetDTO(parsedSet *model.ParsedSet) *dto.ParsedSet {
-	return &dto.ParsedSet{
-		Name:      parsedSet.Name,
-		IPVersion: parsedSet.IPVersion,
-		Nets:      parsedSet.Nets,
+func toParsedHEPDTO(parsedHEP *model.ParsedHEP) *dto.ParsedHEP {
+	return &dto.ParsedHEP{
+		UUID:  parsedHEP.UUID,
+		Name:  parsedHEP.Name,
+		IPsV4: parsedHEP.IPsV4,
+		IPsV6: parsedHEP.IPsV6,
+	}
+}
+
+func toParsedGNSDTO(parsedGNS *model.ParsedGNS) *dto.ParsedGNS {
+	return &dto.ParsedGNS{
+		UUID:   parsedGNS.UUID,
+		Name:   parsedGNS.Name,
+		NetsV4: parsedGNS.NetsV4,
+		NetsV6: parsedGNS.NetsV6,
 	}
 }

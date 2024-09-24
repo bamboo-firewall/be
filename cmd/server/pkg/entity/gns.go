@@ -18,13 +18,14 @@ type GlobalNetworkSet struct {
 }
 
 type GNSMetadata struct {
-	Name      string            `bson:"name"`
-	IPVersion int               `bson:"ip_version"`
-	Labels    map[string]string `bson:"labels"`
+	Name   string            `bson:"name"`
+	Labels map[string]string `bson:"labels"`
 }
 
 type GNSSpec struct {
-	Nets []string `bson:"nets"`
+	Nets   []string `bson:"nets"`
+	NetsV4 []string `bson:"nets_v4"`
+	NetsV6 []string `bson:"nets_v6"`
 }
 
 func (GlobalNetworkSet) CollectionName() string {

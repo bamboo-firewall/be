@@ -25,24 +25,25 @@ type HostEndpointSpecPortInput struct {
 	Protocol string
 }
 
-type FetchPoliciesInput struct {
+type FetchHostEndpointPolicyInput struct {
 	Name string
 }
 
 type HostEndPointPolicy struct {
-	MetaData       HostEndPointPolicyMetadata
-	HEP            *entity.HostEndpoint
-	ParsedPolicies []*ParsedPolicy
-	ParsedSets     []*ParsedSet
+	MetaData   HostEndPointPolicyMetadata
+	HEP        *entity.HostEndpoint
+	ParsedGNPs []*ParsedGNP
+	ParsedHEPs []*ParsedHEP
+	ParsedGNSs []*ParsedGNS
 }
 
 type HostEndPointPolicyMetadata struct {
-	HEPVersion  uint
 	GNPVersions map[string]uint
+	HEPVersions map[string]uint
 	GNSVersions map[string]uint
 }
 
-type ParsedPolicy struct {
+type ParsedGNP struct {
 	UUID          string
 	Version       uint
 	Name          string
@@ -57,18 +58,28 @@ type ParsedRule struct {
 	IsProtocolNegative bool
 	SrcNets            []string
 	IsSrcNetNegative   bool
-	SrcGNSNetNames     []string
+	SrcGNSUUIDs        []string
+	SrcHEPUUIDs        []string
 	SrcPorts           []string
 	IsSrcPortNegative  bool
 	DstNets            []string
 	IsDstNetNegative   bool
-	DstGNSNetNames     []string
+	DstGNSUUIDs        []string
+	DstHEPUUIDs        []string
 	DstPorts           []string
 	IsDstPortNegative  bool
 }
 
-type ParsedSet struct {
-	Name      string
-	IPVersion int
-	Nets      []string
+type ParsedHEP struct {
+	UUID  string
+	Name  string
+	IPsV4 []string
+	IPsV6 []string
+}
+
+type ParsedGNS struct {
+	UUID   string
+	Name   string
+	NetsV4 []string
+	NetsV6 []string
 }
