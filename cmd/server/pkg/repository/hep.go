@@ -48,3 +48,15 @@ func (r *PolicyDB) DeleteHostEndpointByName(ctx context.Context, name string) *i
 	}
 	return nil
 }
+
+func (r *PolicyDB) ListHostEndpoints(ctx context.Context) ([]*entity.HostEndpoint, *ierror.CoreError) {
+	heps := make([]*entity.HostEndpoint, 0)
+	cursor, err := r.mongo.Database.Collection(entity.HostEndpoint{}.CollectionName()).Find(ctx, bson.D{})
+	if err != nil {
+		return nil, errlist.ErrDatabase.WithChild(err)
+	}
+	if err = cursor.All(ctx, &heps); err != nil {
+		return nil, errlist.ErrUnmarshalFailed.WithChild(err)
+	}
+	return heps, nil
+}

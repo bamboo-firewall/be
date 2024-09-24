@@ -29,12 +29,12 @@ type CreateGlobalNetworkSetInput struct {
 }
 
 type GNSMetadataInput struct {
-	Name   string            `json:"name" validate:"required"`
+	Name   string            `json:"name" validate:"required,name"`
 	Labels map[string]string `json:"labels"`
 }
 
 type GNSSpecInput struct {
-	Nets []string `json:"nets"`
+	Nets []string `json:"nets" validate:"min=1,unique"`
 }
 
 type DeleteGlobalNetworkSetInput struct {

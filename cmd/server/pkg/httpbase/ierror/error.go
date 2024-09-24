@@ -32,6 +32,11 @@ func (e *Error) SetSubError(subErr *CoreError) *Error {
 	return e
 }
 
+func (e *Error) SetHTTPStatus(status int) *Error {
+	e.HTTPStatusCode = status
+	return e
+}
+
 func (e *Error) SetDetail(detail interface{}) *Error {
 	e.Detail = detail
 	return e

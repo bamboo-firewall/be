@@ -17,7 +17,7 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
-func NewGNP(policyMongo *repository.PolicyMongo) *gnp {
+func NewGNP(policyMongo *repository.PolicyDB) *gnp {
 	return &gnp{
 		storage: policyMongo,
 	}
@@ -36,36 +36,12 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 
 	var specIngress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Ingress {
-		specIngress = append(specIngress, entity.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: entity.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: entity.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specIngress = append(specIngress, modelToRule(rule))
 	}
 
 	var specEgress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Egress {
-		specEgress = append(specEgress, entity.GNPSpecRule{
-			Metadata: rule.Metadata,
-			Action:   rule.Action,
-			Protocol: rule.Protocol,
-			Source: entity.GNPSpecRuleEntity{
-				Nets:  rule.Source.Nets,
-				Ports: rule.Source.Ports,
-			},
-			Destination: entity.GNPSpecRuleEntity{
-				Nets:  rule.Destination.Nets,
-				Ports: rule.Destination.Ports,
-			},
-		})
+		specEgress = append(specEgress, modelToRule(rule))
 	}
 
 	gnpEntity := &entity.GlobalNetworkPolicy{
@@ -78,7 +54,6 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 		},
 		Spec: entity.GNPSpec{
 			Selector: input.Spec.Selector,
-			Types:    input.Spec.Types,
 			Ingress:  specIngress,
 			Egress:   specEgress,
 		},
@@ -86,7 +61,7 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if !errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkSet) {
+	if gnpExisted != nil {
 		gnpEntity.ID = gnpExisted.ID
 		gnpEntity.UUID = gnpExisted.UUID
 		gnpEntity.Version = gnpExisted.Version + 1
@@ -94,14 +69,39 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 	}
 
 	if coreErr = ds.storage.UpsertGroupPolicy(ctx, gnpEntity); coreErr != nil {
-		return nil, httpbase.ErrDatabase(ctx, "Create global network failed").SetSubError(coreErr)
+		return nil, httpbase.ErrDatabase(ctx, "create global network failed").SetSubError(coreErr)
 	}
 	return gnpEntity, nil
 }
 
 func (ds *gnp) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteGNPByName(ctx, name); coreErr != nil {
-		return httpbase.ErrDatabase(ctx, "Delete global network policy failed").SetSubError(coreErr)
+		return httpbase.ErrDatabase(ctx, "delete global network policy failed").SetSubError(coreErr)
 	}
 	return nil
+}
+
+func modelToRule(rule model.GNPSpecRuleInput) entity.GNPSpecRule {
+	return entity.GNPSpecRule{
+		Metadata:    rule.Metadata,
+		Action:      rule.Action,
+		Protocol:    rule.Protocol,
+		NotProtocol: rule.NotProtocol,
+		IPVersion:   entity.IPVersion(rule.IPVersion),
+		Source:      modelToRuleEntity(rule.Source),
+		Destination: modelToRuleEntity(rule.Destination),
+	}
+}
+
+func modelToRuleEntity(ruleEntity *model.GNPSpecRuleEntityInput) *entity.GNPSpecRuleEntity {
+	if ruleEntity == nil {
+		return nil
+	}
+	return &entity.GNPSpecRuleEntity{
+		Selector: ruleEntity.Selector,
+		Nets:     ruleEntity.Nets,
+		NotNets:  ruleEntity.NotNets,
+		Ports:    ruleEntity.Ports,
+		NotPorts: ruleEntity.NotPorts,
+	}
 }
