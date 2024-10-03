@@ -86,6 +86,17 @@ func exactIPs(ips []string) (ipsV4, ipsV6 []string) {
 	return
 }
 
+func (ds *hep) Get(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.Error) {
+	hepEntity, coreErr := ds.storage.GetHostEndpointByName(ctx, name)
+	if coreErr != nil {
+		if errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
+			return nil, httpbase.ErrNotFound(ctx, "not found").SetSubError(coreErr)
+		}
+		return nil, httpbase.ErrDatabase(ctx, "get host endpoint failed").SetSubError(coreErr)
+	}
+	return hepEntity, nil
+}
+
 func (ds *hep) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteHostEndpointByName(ctx, name); coreErr != nil {
 		return httpbase.ErrDatabase(ctx, "delete host endpoint failed").SetSubError(coreErr)

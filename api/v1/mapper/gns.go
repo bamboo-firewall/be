@@ -22,8 +22,8 @@ func ToGlobalNetworkSetDTO(gns *entity.GlobalNetworkSet) *dto.GlobalNetworkSet {
 			Nets: gns.Spec.Nets,
 		},
 		Description: gns.Description,
-		CreatedAt:   gns.CreatedAt,
-		UpdatedAt:   gns.UpdatedAt,
+		CreatedAt:   gns.CreatedAt.Local(),
+		UpdatedAt:   gns.UpdatedAt.Local(),
 	}
 }
 

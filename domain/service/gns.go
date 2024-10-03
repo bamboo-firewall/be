@@ -89,6 +89,17 @@ func exactNets(nets []string) (netsV4 []string, netsV6 []string) {
 	return
 }
 
+func (ds *gns) Get(ctx context.Context, name string) (*entity.GlobalNetworkSet, *ierror.Error) {
+	gnsEntity, coreErr := ds.storage.GetGNSByName(ctx, name)
+	if coreErr != nil {
+		if errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkSet) {
+			return nil, httpbase.ErrNotFound(ctx, "not found").SetSubError(coreErr)
+		}
+		return nil, httpbase.ErrDatabase(ctx, "get global network set failed").SetSubError(coreErr)
+	}
+	return gnsEntity, nil
+}
+
 func (ds *gns) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteGNSByName(ctx, name); coreErr != nil {
 		return httpbase.ErrDatabase(ctx, "delete global network set failed").SetSubError(coreErr)

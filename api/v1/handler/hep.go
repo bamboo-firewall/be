@@ -16,6 +16,7 @@ import (
 
 type hepService interface {
 	Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
+	Get(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
 	FetchPolicies(ctx context.Context, input *model.FetchHostEndpointPolicyInput) (*model.HostEndPointPolicy, *ierror.Error)
 }
@@ -38,6 +39,21 @@ func (h *hep) Create(c *gin.Context) {
 	}
 
 	hepEntity, ierr := h.service.Create(c.Request.Context(), mapper.ToCreateHostEndpointInput(in))
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToHostEndpointDTO(hepEntity))
+}
+
+func (h *hep) Get(c *gin.Context) {
+	in := new(dto.GetHostEndpointInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	hepEntity, ierr := h.service.Get(c.Request.Context(), in.Name)
 	if ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return

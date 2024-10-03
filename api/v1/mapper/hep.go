@@ -23,8 +23,8 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 			IPs:           hep.Spec.IPs,
 		},
 		Description: hep.Description,
-		CreatedAt:   hep.CreatedAt,
-		UpdatedAt:   hep.UpdatedAt,
+		CreatedAt:   hep.CreatedAt.Local(),
+		UpdatedAt:   hep.UpdatedAt.Local(),
 	}
 }
 

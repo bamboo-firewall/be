@@ -21,6 +21,7 @@ func RegisterHandler(repo *repository.PolicyDB) http.Handler {
 	{
 		hepHandler := handler.NewHEP(service.NewHEP(repo))
 		router.POST("/api/v1/hostEndpoints", hepHandler.Create)
+		router.GET("/api/v1/hostEndpoints/byName/:name", hepHandler.Get)
 		router.DELETE("/api/v1/hostEndpoints", hepHandler.Delete)
 
 		router.GET("/api/internal/v1/hostEndpoints/byName/:name/fetchPolicies", hepHandler.FetchPolicies)
@@ -29,12 +30,14 @@ func RegisterHandler(repo *repository.PolicyDB) http.Handler {
 	{
 		gnpHandler := handler.NewGNP(service.NewGNP(repo))
 		router.POST("/api/v1/globalNetworkPolicies", gnpHandler.Create)
+		router.GET("/api/v1/globalNetworkPolicies/byName/:name", gnpHandler.Get)
 		router.DELETE("/api/v1/globalNetworkPolicies", gnpHandler.Delete)
 	}
 
 	{
 		gnsHandler := handler.NewGNS(service.NewGNS(repo))
 		router.POST("/api/v1/globalNetworkSets", gnsHandler.Create)
+		router.GET("/api/v1/globalNetworkSets/byName/:name", gnsHandler.Get)
 		router.DELETE("/api/v1/globalNetworkSets", gnsHandler.Delete)
 	}
 
