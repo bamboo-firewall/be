@@ -77,6 +77,6 @@ func create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("Total: %d resources. Success: %d. Fail: %d.", len(resources), numHandled, len(resources)-numHandled)
+	fmt.Printf("Total: %d resources. Success: %d. Fail: %d.\n", len(resources), numHandled, len(resources)-numHandled)
 	return nil
 }

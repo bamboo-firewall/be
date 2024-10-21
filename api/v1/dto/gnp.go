@@ -9,8 +9,8 @@ type GlobalNetworkPolicy struct {
 	Metadata    GNPMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Spec        GNPSpec     `json:"spec" yaml:"spec"`
 	Description string      `json:"description,omitempty" yaml:"description"`
-	CreatedAt   time.Time   `json:"createdAt" yaml:"createdAt" yaml:"createdAt"`
-	UpdatedAt   time.Time   `json:"updatedAt" yaml:"updatedAt" yaml:"updatedAt"`
+	CreatedAt   time.Time   `json:"createdAt" yaml:"createdAt"`
+	UpdatedAt   time.Time   `json:"updatedAt" yaml:"updatedAt"`
 }
 
 type GNPMetadata struct {

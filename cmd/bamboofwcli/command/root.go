@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	binaryName = "bbfwcli"
+	binaryName = "bbfw"
 )
 
 var rootCMD = &cobra.Command{
