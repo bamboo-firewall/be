@@ -16,6 +16,7 @@ import (
 
 type gnpService interface {
 	Create(ctx context.Context, input *model.CreateGlobalNetworkPolicyInput) (*entity.GlobalNetworkPolicy, *ierror.Error)
+	Get(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
 }
 
@@ -42,6 +43,21 @@ func (h *gnp) Create(c *gin.Context) {
 		return
 	}
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToGlobalNetworkPolicyDTO(gnsEntity))
+}
+
+func (h *gnp) Get(c *gin.Context) {
+	in := new(dto.GetGNPInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	gnpEntity, ierr := h.service.Get(c.Request.Context(), in.Name)
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToGlobalNetworkPolicyDTO(gnpEntity))
 }
 
 func (h *gnp) Delete(c *gin.Context) {

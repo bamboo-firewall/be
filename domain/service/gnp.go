@@ -74,6 +74,17 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 	return gnpEntity, nil
 }
 
+func (ds *gnp) Get(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.Error) {
+	gnpEntity, coreErr := ds.storage.GetGNPByName(ctx, name)
+	if coreErr != nil {
+		if errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkPolicy) {
+			return nil, httpbase.ErrNotFound(ctx, "not found").SetSubError(coreErr)
+		}
+		return nil, httpbase.ErrDatabase(ctx, "get global network policy failed").SetSubError(coreErr)
+	}
+	return gnpEntity, nil
+}
+
 func (ds *gnp) Delete(ctx context.Context, name string) *ierror.Error {
 	if coreErr := ds.storage.DeleteGNPByName(ctx, name); coreErr != nil {
 		return httpbase.ErrDatabase(ctx, "delete global network policy failed").SetSubError(coreErr)

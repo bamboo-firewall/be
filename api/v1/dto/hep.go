@@ -5,9 +5,9 @@ import (
 )
 
 type HostEndpoint struct {
-	ID          string               `json:"id"`
-	UUID        string               `json:"uuid"`
-	Version     uint                 `json:"version"`
+	ID          string               `json:"id" yaml:"id"`
+	UUID        string               `json:"uuid" yaml:"uuid"`
+	Version     uint                 `json:"version" yaml:"version"`
 	Metadata    HostEndpointMetadata `json:"metadata" yaml:"metadata"`
 	Spec        HostEndpointSpec     `json:"spec" yaml:"spec"`
 	Description string               `json:"description" yaml:"description"`
@@ -27,7 +27,7 @@ type HostEndpointSpec struct {
 
 type CreateHostEndpointInput struct {
 	Metadata    HostEndpointMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
-	Spec        HostEndpointSpecInput     `json:"spec" yaml:"spec"`
+	Spec        HostEndpointSpecInput     `json:"spec" yaml:"spec" validate:"required"`
 	Description string                    `json:"description" yaml:"description"`
 }
 
@@ -39,6 +39,10 @@ type HostEndpointMetadataInput struct {
 type HostEndpointSpecInput struct {
 	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
 	IPs           []string `json:"ips" yaml:"ips" validate:"min=1,unique,dive,ip"`
+}
+
+type GetHostEndpointInput struct {
+	Name string `uri:"name" validate:"required"`
 }
 
 type DeleteHostEndpointInput struct {

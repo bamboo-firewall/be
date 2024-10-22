@@ -19,13 +19,13 @@ type GlobalNetworkSet struct {
 
 type GNSMetadata struct {
 	Name   string            `bson:"name"`
-	Labels map[string]string `bson:"labels"`
+	Labels map[string]string `bson:"labels,omitempty"`
 }
 
 type GNSSpec struct {
 	Nets   []string `bson:"nets"`
-	NetsV4 []string `bson:"nets_v4"`
-	NetsV6 []string `bson:"nets_v6"`
+	NetsV4 []string `bson:"nets_v4,omitempty"`
+	NetsV6 []string `bson:"nets_v6,omitempty"`
 }
 
 func (GlobalNetworkSet) CollectionName() string {

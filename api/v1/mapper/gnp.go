@@ -34,8 +34,8 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 			Egress:   specEgress,
 		},
 		Description: gnp.Description,
-		CreatedAt:   gnp.CreatedAt,
-		UpdatedAt:   gnp.UpdatedAt,
+		CreatedAt:   gnp.CreatedAt.Local(),
+		UpdatedAt:   gnp.UpdatedAt.Local(),
 	}
 }
 

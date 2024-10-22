@@ -3,9 +3,9 @@ package dto
 import "time"
 
 type GlobalNetworkPolicy struct {
-	ID          string      `json:"id"`
-	UUID        string      `json:"uuid"`
-	Version     uint        `json:"version"`
+	ID          string      `json:"id" yaml:"id"`
+	UUID        string      `json:"uuid" yaml:"uuid"`
+	Version     uint        `json:"version" yaml:"version"`
 	Metadata    GNPMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Spec        GNPSpec     `json:"spec" yaml:"spec"`
 	Description string      `json:"description,omitempty" yaml:"description"`
@@ -29,7 +29,7 @@ type GNPSpecRule struct {
 	Action      string             `json:"action" yaml:"action"`
 	Protocol    string             `json:"protocol,omitempty" yaml:"protocol"`
 	NotProtocol string             `json:"notProtocol,omitempty" yaml:"notProtocol"`
-	IPVersion   int                `json:"ipVersion"`
+	IPVersion   int                `json:"ipVersion" yaml:"ipVersion"`
 	Source      *GNPSpecRuleEntity `json:"source,omitempty" yaml:"source"`
 	Destination *GNPSpecRuleEntity `json:"destination,omitempty" yaml:"destination"`
 }
@@ -64,7 +64,7 @@ type GNPSpecRuleInput struct {
 	Action      string                  `json:"action" yaml:"action" validate:"required,action"`
 	Protocol    string                  `json:"protocol" yaml:"protocol" validate:"omitempty,protocol"`
 	NotProtocol string                  `json:"notProtocol" yaml:"notProtocol" validate:"omitempty,protocol"`
-	IPVersion   int                     `json:"ipVersion" validate:"required,ip_version"`
+	IPVersion   int                     `json:"ipVersion" yaml:"ipVersion" validate:"required,ip_version"`
 	Source      *GNPSpecRuleEntityInput `json:"source" yaml:"source" validate:"omitempty"`
 	Destination *GNPSpecRuleEntityInput `json:"destination" yaml:"destination" validate:"omitempty"`
 }
@@ -75,6 +75,10 @@ type GNPSpecRuleEntityInput struct {
 	NotNets  []string      `json:"notNets" yaml:"notNets" validate:"omitempty,min=1,unique"`
 	Ports    []interface{} `json:"ports" yaml:"ports" validate:"omitempty,min=1,unique,dive"`
 	NotPorts []interface{} `json:"notPorts" yaml:"notPorts" validate:"omitempty,min=1,unique,dive"`
+}
+
+type GetGNPInput struct {
+	Name string `uri:"name" validate:"required"`
 }
 
 type DeleteGlobalNetworkPolicyInput struct {

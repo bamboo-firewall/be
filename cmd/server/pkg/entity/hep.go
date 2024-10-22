@@ -25,8 +25,8 @@ type HostEndpointMetadata struct {
 type HostEndpointSpec struct {
 	InterfaceName string   `bson:"interface_name"`
 	IPs           []string `bson:"ips"`
-	IPsV4         []string `bson:"ips_v4"`
-	IPsV6         []string `bson:"ips_v6"`
+	IPsV4         []string `bson:"ips_v4,omitempty"`
+	IPsV6         []string `bson:"ips_v6,omitempty"`
 }
 
 func (HostEndpoint) CollectionName() string {
