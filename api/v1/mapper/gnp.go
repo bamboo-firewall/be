@@ -29,6 +29,7 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 			Labels: gnp.Metadata.Labels,
 		},
 		Spec: dto.GNPSpec{
+			Order:    gnp.Spec.Order,
 			Selector: gnp.Spec.Selector,
 			Ingress:  specIngress,
 			Egress:   specEgress,
@@ -81,6 +82,7 @@ func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *m
 			Labels: in.Metadata.Labels,
 		},
 		Spec: model.GNPSpecInput{
+			Order:    in.Spec.Order,
 			Selector: in.Spec.Selector,
 			Ingress:  specIngress,
 			Egress:   specEgress,

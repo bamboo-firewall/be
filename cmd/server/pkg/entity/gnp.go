@@ -6,6 +6,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	PolicyOrderLowest = ^uint64(0)
+)
+
 type RuleAction string
 
 const (
@@ -32,6 +36,7 @@ type GNPMetadata struct {
 }
 
 type GNPSpec struct {
+	Order    uint64        `bson:"order"`
 	Selector string        `bson:"selector,omitempty"`
 	Ingress  []GNPSpecRule `bson:"ingress,omitempty"`
 	Egress   []GNPSpecRule `bson:"egress,omitempty"`

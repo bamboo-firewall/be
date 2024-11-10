@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,6 +40,21 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 	}
 
 	ipsV4, ipsV6 := exactIPs(input.Spec.IPs)
+	if len(ipsV4) == 0 {
+		return nil, httpbase.ErrBadRequest(ctx, "required at least one IP version 4")
+	}
+	if input.Spec.TenantID == 0 {
+		input.Spec.TenantID = entity.DefaultTenantID
+	}
+	var ipString string
+	if input.Spec.IP == "" {
+		ipString = ipsV4[0]
+	} else {
+		ipString = input.Spec.IP
+	}
+
+	ip := net.ParseIP(ipString)
+
 	hepEntity := &entity.HostEndpoint{
 		ID:      primitive.NewObjectID(),
 		UUID:    uuid.New().String(),
@@ -49,6 +65,8 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 		},
 		Spec: entity.HostEndpointSpec{
 			InterfaceName: input.Spec.InterfaceName,
+			IP:            net.IPToInt(*ip),
+			TenantID:      input.Spec.TenantID,
 			IPs:           input.Spec.IPs,
 			IPsV4:         ipsV4,
 			IPsV6:         ipsV6,
@@ -118,7 +136,7 @@ func (ds *hep) FetchPolicies(ctx context.Context, input *model.FetchHostEndpoint
 		return nil, httpbase.ErrDatabase(ctx, "list host endpoint failed").SetSubError(coreErr)
 	}
 
-	gnps, err := ds.storage.ListGNP(ctx)
+	gnps, err := ds.storage.ListGNP(ctx, model.ListGNPInput{IsOrder: true})
 	if err != nil {
 		return nil, httpbase.ErrDatabase(ctx, "list global network policy failed").SetSubError(coreErr)
 	}
@@ -254,6 +272,22 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 				}
 				break
 			}
+
+			// if selector not match any hep and gns. Using match empty to prevent
+			if len(srcGNSUUIDs) == 0 && len(srcHEPUUIDs) == 0 {
+				var set entity.GlobalNetworkSet
+				if rule.IPVersion == entity.IPVersion4 {
+					set = entity.GNSV4Empty
+				} else if rule.IPVersion == entity.IPVersion6 {
+					set = entity.GNSV6Empty
+				}
+				srcHEPUUIDs = append(srcGNSUUIDs, set.UUID)
+				if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
+					r.parsedGNSsMap[set.UUID] = struct{}{}
+					r.gnsVersions[set.UUID] = set.Version
+					r.parsedGNSs = append(r.parsedGNSs, entityToParsedGNS(&set))
+				}
+			}
 		}
 
 		if len(rule.Source.Nets) > 0 {
@@ -301,7 +335,7 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 					if !((rule.IPVersion == entity.IPVersion4 && len(set.Spec.NetsV4) > 0) || (rule.IPVersion == entity.IPVersion6 && len(set.Spec.NetsV6) > 0)) {
 						continue
 					}
-					dstGNSUUIDs = append(dstGNSUUIDs, set.Metadata.Name)
+					dstGNSUUIDs = append(dstGNSUUIDs, set.UUID)
 					if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
 						r.parsedGNSsMap[set.UUID] = struct{}{}
 						r.gnsVersions[set.UUID] = set.Version
@@ -309,6 +343,22 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 					}
 				}
 				break
+			}
+
+			// if selector not match any hep and gns. Using match empty to prevent
+			if len(dstGNSUUIDs) == 0 && len(dstHEPUUIDs) == 0 {
+				var set entity.GlobalNetworkSet
+				if rule.IPVersion == entity.IPVersion4 {
+					set = entity.GNSV4Empty
+				} else if rule.IPVersion == entity.IPVersion6 {
+					set = entity.GNSV6Empty
+				}
+				dstGNSUUIDs = append(dstGNSUUIDs, set.UUID)
+				if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
+					r.parsedGNSsMap[set.UUID] = struct{}{}
+					r.gnsVersions[set.UUID] = set.Version
+					r.parsedGNSs = append(r.parsedGNSs, entityToParsedGNS(&set))
+				}
 			}
 		}
 
@@ -330,7 +380,7 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 	return &model.ParsedRule{
 		Action:             rule.Action,
 		IPVersion:          int(rule.IPVersion),
-		Protocol:           protocol,
+		Protocol:           strings.ToLower(protocol),
 		IsProtocolNegative: isProtocolNegative,
 		SrcGNSUUIDs:        srcGNSUUIDs,
 		SrcHEPUUIDs:        srcHEPUUIDs,
@@ -349,10 +399,12 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 
 func entityToParsedHEP(hep *entity.HostEndpoint) *model.ParsedHEP {
 	return &model.ParsedHEP{
-		UUID:  hep.UUID,
-		Name:  hep.Metadata.Name,
-		IPsV4: hep.Spec.IPsV4,
-		IPsV6: hep.Spec.IPsV6,
+		UUID:     hep.UUID,
+		Name:     hep.Metadata.Name,
+		TenantID: hep.Spec.TenantID,
+		IP:       net.IntToIP(hep.Spec.IP).String(),
+		IPsV4:    hep.Spec.IPsV4,
+		IPsV6:    hep.Spec.IPsV6,
 	}
 }
 

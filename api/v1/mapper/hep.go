@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
@@ -20,6 +21,8 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 		},
 		Spec: dto.HostEndpointSpec{
 			InterfaceName: hep.Spec.InterfaceName,
+			TenantID:      hep.Spec.TenantID,
+			IP:            net.IntToIP(hep.Spec.IP).String(),
 			IPs:           hep.Spec.IPs,
 		},
 		Description: hep.Description,
@@ -36,6 +39,8 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 		},
 		Spec: model.HostEndpointSpecInput{
 			InterfaceName: in.Spec.InterfaceName,
+			IP:            in.Spec.IP,
+			TenantID:      in.Spec.TenantID,
 			IPs:           in.Spec.IPs,
 		},
 		Description: in.Description,

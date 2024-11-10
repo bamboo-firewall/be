@@ -3,7 +3,38 @@ package entity
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	GNSV4Empty = GlobalNetworkSet{
+		ID:      primitive.NewObjectID(),
+		UUID:    uuid.New().String(),
+		Version: 1,
+		Metadata: GNSMetadata{
+			Name: "v4-empty",
+		},
+		Spec: GNSSpec{
+			NetsV4: []string{""},
+		},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	GNSV6Empty = GlobalNetworkSet{
+		ID:      primitive.NewObjectID(),
+		UUID:    uuid.New().String(),
+		Version: 1,
+		Metadata: GNSMetadata{
+			Name: "v6-empty",
+		},
+		Spec: GNSSpec{
+			NetsV6: []string{""},
+		},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 )
 
 type GlobalNetworkSet struct {

@@ -19,6 +19,7 @@ type GNPMetadata struct {
 }
 
 type GNPSpec struct {
+	Order    uint64        `json:"order" yaml:"order"`
 	Selector string        `json:"selector,omitempty" yaml:"selector"`
 	Ingress  []GNPSpecRule `json:"ingress,omitempty" yaml:"ingress"`
 	Egress   []GNPSpecRule `json:"egress,omitempty" yaml:"egress"`
@@ -54,6 +55,7 @@ type GNPMetadataInput struct {
 }
 
 type GNPSpecInput struct {
+	Order    *uint64            `json:"order" yaml:"order"`
 	Selector string             `json:"selector" yaml:"selector" validate:"omitempty,selector"`
 	Ingress  []GNPSpecRuleInput `json:"ingress" yaml:"ingress" validate:"omitempty,min=1,dive"`
 	Egress   []GNPSpecRuleInput `json:"egress" yaml:"egress" validate:"omitempty,min=1,dive"`

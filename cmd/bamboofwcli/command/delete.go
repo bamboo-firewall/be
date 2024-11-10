@@ -31,7 +31,7 @@ var deleteCMD = &cobra.Command{
   bbfwcli delete hep allow_ssh allow_ping
 
   # Delete many policy with filename
-  bbfwcli delete hep allow_ssh.yaml allow_ping.yaml`,
+  bbfwcli delete hep -f allow_ssh.yaml allow_ping.yaml`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := deleteResources(cmd, args); err != nil {

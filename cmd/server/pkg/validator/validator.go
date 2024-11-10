@@ -47,7 +47,7 @@ func Init() {
 	registerStructValidation(validateGNSSpecInput, dto.GNSSpecInput{})
 }
 
-var nameRegex = regexp.MustCompile(`^[a-z_-]+$`)
+var nameRegex = regexp.MustCompile(`^[-a-zA-Z0-9_\\.]+$`)
 
 func validateName(fl validator.FieldLevel) bool {
 	return nameRegex.MatchString(fl.Field().String())

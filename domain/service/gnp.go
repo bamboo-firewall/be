@@ -39,6 +39,12 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 		specIngress = append(specIngress, modelToRule(rule))
 	}
 
+	var order uint64
+	if input.Spec.Order != nil {
+		order = *input.Spec.Order
+	} else {
+		order = entity.PolicyOrderLowest
+	}
 	var specEgress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Egress {
 		specEgress = append(specEgress, modelToRule(rule))
@@ -53,6 +59,7 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 			Labels: input.Metadata.Labels,
 		},
 		Spec: entity.GNPSpec{
+			Order:    order,
 			Selector: input.Spec.Selector,
 			Ingress:  specIngress,
 			Egress:   specEgress,

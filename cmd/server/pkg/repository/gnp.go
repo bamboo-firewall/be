@@ -11,6 +11,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/common/errlist"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+	"github.com/bamboo-firewall/be/domain/model"
 )
 
 func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) *ierror.CoreError {
@@ -49,9 +50,13 @@ func (r *PolicyDB) DeleteGNPByName(ctx context.Context, name string) *ierror.Cor
 	return nil
 }
 
-func (r *PolicyDB) ListGNP(ctx context.Context) ([]*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+func (r *PolicyDB) ListGNP(ctx context.Context, input model.ListGNPInput) ([]*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+	var opts []*options.FindOptions
+	if input.IsOrder {
+		opts = append(opts, options.Find().SetSort(bson.D{{"order", 1}}))
+	}
 	policies := make([]*entity.GlobalNetworkPolicy, 0)
-	cursor, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).Find(ctx, bson.D{})
+	cursor, err := r.mongo.Database.Collection(entity.GlobalNetworkPolicy{}.CollectionName()).Find(ctx, bson.D{}, opts...)
 	if err != nil {
 		return nil, errlist.ErrDatabase.WithChild(err)
 	}

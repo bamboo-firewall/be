@@ -22,6 +22,8 @@ type HostEndpointMetadata struct {
 
 type HostEndpointSpec struct {
 	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
+	TenantID      uint64   `json:"tenant_id" yaml:"tenant_id"`
+	IP            string   `json:"ip" yaml:"ip"`
 	IPs           []string `json:"ips" yaml:"ips"`
 }
 
@@ -32,12 +34,14 @@ type CreateHostEndpointInput struct {
 }
 
 type HostEndpointMetadataInput struct {
-	Name   string            `json:"name" yaml:"name" validate:"required,name"`
+	Name   string            `json:"name" yaml:"name" validate:"omitempty,name"`
 	Labels map[string]string `json:"labels" yaml:"labels"`
 }
 
 type HostEndpointSpecInput struct {
 	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
+	TenantID      uint64   `json:"tenant_id" yaml:"tenant_id" validate:"omitempty"`
+	IP            string   `json:"ip" yaml:"ip" validate:"omitempty,ip"`
 	IPs           []string `json:"ips" yaml:"ips" validate:"min=1,unique,dive,ip"`
 }
 
@@ -95,10 +99,12 @@ type ParsedRule struct {
 }
 
 type ParsedHEP struct {
-	UUID  string   `json:"uuid"`
-	Name  string   `json:"name"`
-	IPsV4 []string `json:"ipsV4"`
-	IPsV6 []string `json:"ipsV6"`
+	UUID     string   `json:"uuid"`
+	TenantID uint64   `json:"tenant_id"`
+	Name     string   `json:"name"`
+	IP       string   `json:"ip"`
+	IPsV4    []string `json:"ipsV4"`
+	IPsV6    []string `json:"ipsV6"`
 }
 
 type ParsedGNS struct {

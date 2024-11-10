@@ -60,6 +60,10 @@ var (
 		return newClientIError(ctx, ErrorCodeBadRequest, msgID).SetHTTPStatus(http.StatusBadRequest)
 	}
 
+	ErrBadRequest = func(ctx context.Context, msgID string) *ierror.Error {
+		return newClientIError(ctx, ErrorCodeBadRequest, msgID).SetHTTPStatus(http.StatusBadRequest)
+	}
+
 	ErrDatabase = func(ctx context.Context, msgID string) *ierror.Error {
 		return newClientIError(ctx, ErrorCodeDatabase, msgID).SetHTTPStatus(http.StatusInternalServerError)
 	}

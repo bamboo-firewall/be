@@ -15,6 +15,8 @@ type HostEndpointMetadataInput struct {
 
 type HostEndpointSpecInput struct {
 	InterfaceName string
+	IP            string
+	TenantID      uint64
 	IPs           []string
 	Ports         []HostEndpointSpecPortInput
 }
@@ -71,10 +73,12 @@ type ParsedRule struct {
 }
 
 type ParsedHEP struct {
-	UUID  string
-	Name  string
-	IPsV4 []string
-	IPsV6 []string
+	UUID     string
+	Name     string
+	TenantID uint64
+	IP       string
+	IPsV4    []string
+	IPsV6    []string
 }
 
 type ParsedGNS struct {
