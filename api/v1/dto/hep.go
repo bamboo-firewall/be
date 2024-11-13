@@ -22,7 +22,7 @@ type HostEndpointMetadata struct {
 
 type HostEndpointSpec struct {
 	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
-	TenantID      uint64   `json:"tenant_id" yaml:"tenant_id"`
+	TenantID      uint64   `json:"tenantID" yaml:"tenantID"`
 	IP            string   `json:"ip" yaml:"ip"`
 	IPs           []string `json:"ips" yaml:"ips"`
 }
@@ -40,32 +40,39 @@ type HostEndpointMetadataInput struct {
 
 type HostEndpointSpecInput struct {
 	InterfaceName string   `json:"interfaceName" yaml:"interfaceName"`
-	TenantID      uint64   `json:"tenant_id" yaml:"tenant_id" validate:"omitempty"`
+	TenantID      uint64   `json:"tenantID" yaml:"tenantID" validate:"omitempty"`
 	IP            string   `json:"ip" yaml:"ip" validate:"omitempty,ip"`
 	IPs           []string `json:"ips" yaml:"ips" validate:"min=1,unique,dive,ip"`
 }
 
+type ListHEPsInput struct {
+	TenantID *uint64 `form:"tenantID" yaml:"tenantID" validate:"omitempty"`
+	IP       *string `form:"ip" yaml:"ip" validate:"omitempty,ip"`
+}
+
 type GetHostEndpointInput struct {
-	Name string `uri:"name" validate:"required"`
+	TenantID uint64 `uri:"tenantID" yaml:"tenantID" validate:"required"`
+	IP       string `uri:"ip" yaml:"ip" validate:"required,ip"`
 }
 
 type DeleteHostEndpointInput struct {
-	Metadata HostEndpointMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
+	Spec HostEndpointSpecInput `json:"spec" yaml:"spec" validate:"required"`
 }
 
-type FetchHostEndpointPolicyInput struct {
-	Name string `uri:"name" validate:"required"`
+type FetchHostEndpointPoliciesInput struct {
+	TenantID *uint64 `form:"tenantID" yaml:"tenantID" validate:"omitempty"`
+	IP       *string `form:"ip" yaml:"ip" validate:"omitempty,ip"`
 }
 
 type HostEndpointPolicy struct {
-	MetaData   HostEndPointPolicyMetadata `json:"metadata"`
+	MetaData   HostEndpointPolicyMetadata `json:"metadata"`
 	HEP        *HostEndpoint              `json:"hostEndpoint"`
 	ParsedGNPs []*ParsedGNP               `json:"parsedGNPs"`
 	ParsedHEPs []*ParsedHEP               `json:"parsedHEPs"`
 	ParsedGNSs []*ParsedGNS               `json:"parsedGNSs"`
 }
 
-type HostEndPointPolicyMetadata struct {
+type HostEndpointPolicyMetadata struct {
 	HEPVersions map[string]uint `json:"hepVersions"`
 	GNPVersions map[string]uint `json:"gnpVersions"`
 	GNSVersions map[string]uint `json:"gnsVersions"`
@@ -80,27 +87,27 @@ type ParsedGNP struct {
 }
 
 type ParsedRule struct {
-	Action             string   `json:"action"`
-	IPVersion          int      `json:"ipVersion"`
-	Protocol           string   `json:"protocol"`
-	IsProtocolNegative bool     `json:"isProtocolNegative"`
-	SrcNets            []string `json:"srcNets"`
-	IsSrcNetNegative   bool     `json:"isSrcNetNegative"`
-	SrcGNSUUIDs        []string `json:"srcGNSUUIDs"`
-	SrcHEPUUIDs        []string `json:"srcHEPUUIDs"`
-	SrcPorts           []string `json:"srcPorts"`
-	IsSrcPortNegative  bool     `json:"isSrcPortNegative"`
-	DstNets            []string `json:"dstNets"`
-	IsDstNetNegative   bool     `json:"isDstNetNegative"`
-	DstGNSUUIDs        []string `json:"dstGNSUUIDs"`
-	DstHEPUUIDs        []string `json:"dstHEPUUIDs"`
-	DstPorts           []string `json:"dstPorts"`
-	IsDstPortNegative  bool     `json:"isDstPortNegative"`
+	Action             string      `json:"action"`
+	IPVersion          int         `json:"ipVersion"`
+	Protocol           interface{} `json:"protocol"`
+	IsProtocolNegative bool        `json:"isProtocolNegative"`
+	SrcNets            []string    `json:"srcNets"`
+	IsSrcNetNegative   bool        `json:"isSrcNetNegative"`
+	SrcGNSUUIDs        []string    `json:"srcGNSUUIDs"`
+	SrcHEPUUIDs        []string    `json:"srcHEPUUIDs"`
+	SrcPorts           []string    `json:"srcPorts"`
+	IsSrcPortNegative  bool        `json:"isSrcPortNegative"`
+	DstNets            []string    `json:"dstNets"`
+	IsDstNetNegative   bool        `json:"isDstNetNegative"`
+	DstGNSUUIDs        []string    `json:"dstGNSUUIDs"`
+	DstHEPUUIDs        []string    `json:"dstHEPUUIDs"`
+	DstPorts           []string    `json:"dstPorts"`
+	IsDstPortNegative  bool        `json:"isDstPortNegative"`
 }
 
 type ParsedHEP struct {
 	UUID     string   `json:"uuid"`
-	TenantID uint64   `json:"tenant_id"`
+	TenantID uint64   `json:"tenantID"`
 	Name     string   `json:"name"`
 	IP       string   `json:"ip"`
 	IPsV4    []string `json:"ipsV4"`

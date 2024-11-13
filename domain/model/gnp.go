@@ -12,7 +12,7 @@ type GNPMetadataInput struct {
 }
 
 type GNPSpecInput struct {
-	Order    *uint64
+	Order    *uint32
 	Selector string
 	Ingress  []GNPSpecRuleInput
 	Egress   []GNPSpecRuleInput
@@ -21,8 +21,8 @@ type GNPSpecInput struct {
 type GNPSpecRuleInput struct {
 	Metadata    map[string]string
 	Action      string
-	Protocol    string
-	NotProtocol string
+	Protocol    interface{}
+	NotProtocol interface{}
 	IPVersion   int
 	Source      *GNPSpecRuleEntityInput
 	Destination *GNPSpecRuleEntityInput
@@ -36,6 +36,6 @@ type GNPSpecRuleEntityInput struct {
 	NotPorts []interface{}
 }
 
-type ListGNPInput struct {
+type ListGNPsInput struct {
 	IsOrder bool
 }

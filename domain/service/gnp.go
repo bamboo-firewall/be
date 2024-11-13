@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/bamboo-firewall/be"
@@ -28,18 +27,12 @@ type gnp struct {
 }
 
 func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolicyInput) (*entity.GlobalNetworkPolicy, *ierror.Error) {
-	// ToDo: use transaction and lock row
-	gnpExisted, coreErr := ds.storage.GetGNPByName(ctx, input.Metadata.Name)
-	if coreErr != nil && !errors.Is(coreErr, errlist.ErrNotFoundGlobalNetworkPolicy) {
-		return nil, httpbase.ErrDatabase(ctx, "get global network policy failed").SetSubError(coreErr)
-	}
-
 	var specIngress []entity.GNPSpecRule
 	for _, rule := range input.Spec.Ingress {
 		specIngress = append(specIngress, modelToRule(rule))
 	}
 
-	var order uint64
+	var order uint32
 	if input.Spec.Order != nil {
 		order = *input.Spec.Order
 	} else {
@@ -51,9 +44,8 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 	}
 
 	gnpEntity := &entity.GlobalNetworkPolicy{
-		ID:      primitive.NewObjectID(),
-		UUID:    uuid.New().String(),
-		Version: 1,
+		ID:   primitive.NewObjectID(),
+		UUID: entity.NewMinifyUUID(),
 		Metadata: entity.GNPMetadata{
 			Name:   input.Metadata.Name,
 			Labels: input.Metadata.Labels,
@@ -68,15 +60,13 @@ func (ds *gnp) Create(ctx context.Context, input *model.CreateGlobalNetworkPolic
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	if gnpExisted != nil {
-		gnpEntity.ID = gnpExisted.ID
-		gnpEntity.UUID = gnpExisted.UUID
-		gnpEntity.Version = gnpExisted.Version + 1
-		gnpEntity.CreatedAt = gnpExisted.CreatedAt
-	}
 
-	if coreErr = ds.storage.UpsertGroupPolicy(ctx, gnpEntity); coreErr != nil {
-		return nil, httpbase.ErrDatabase(ctx, "create global network failed").SetSubError(coreErr)
+	gnpEntity, coreErr := ds.storage.UpsertGroupPolicy(ctx, gnpEntity)
+	if coreErr != nil {
+		if errors.Is(coreErr, errlist.ErrDuplicateGlobalNetworkPolicy) {
+			return nil, httpbase.ErrBadRequest(ctx, "duplicate global network policy").SetSubError(coreErr)
+		}
+		return nil, httpbase.ErrDatabase(ctx, "create global network policy failed").SetSubError(coreErr)
 	}
 	return gnpEntity, nil
 }
@@ -97,6 +87,14 @@ func (ds *gnp) Delete(ctx context.Context, name string) *ierror.Error {
 		return httpbase.ErrDatabase(ctx, "delete global network policy failed").SetSubError(coreErr)
 	}
 	return nil
+}
+
+func (ds *gnp) List(ctx context.Context, input *model.ListGNPsInput) ([]*entity.GlobalNetworkPolicy, *ierror.Error) {
+	gnpsEntity, coreErr := ds.storage.ListGNPs(ctx, input)
+	if coreErr != nil {
+		return nil, httpbase.ErrDatabase(ctx, "list global network policies failed").SetSubError(coreErr)
+	}
+	return gnpsEntity, nil
 }
 
 func modelToRule(rule model.GNPSpecRuleInput) entity.GNPSpecRule {

@@ -18,6 +18,10 @@ func (s *gns) Create(ctx context.Context, apiServer APIServer, resource interfac
 	return apiServer.CreateGNS(ctx, r)
 }
 
+func (s *gns) List(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
+	return apiServer.ListGNSs(ctx)
+}
+
 func (s *gns) Get(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
 	r := resource.(*dto.GetGNSInput)
 	return apiServer.GetGNS(ctx, r)
@@ -30,4 +34,17 @@ func (s *gns) Delete(ctx context.Context, apiServer APIServer, resource interfac
 
 func (s *gns) GetResourceType() ResourceType {
 	return ResourceTypeGNS
+}
+
+func (s *gns) GetHeader() []string {
+	return []string{"UUID", "NAME", "NETS", "VERSION"}
+}
+
+func (s *gns) GetHeaderMap() map[string]string {
+	return map[string]string{
+		"UUID":    "{{.UUID}}",
+		"NAME":    "{{.Metadata.Name}}",
+		"NETS":    "{{.Spec.Nets}}",
+		"VERSION": "{{.Version}}",
+	}
 }

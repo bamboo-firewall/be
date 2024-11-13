@@ -19,7 +19,7 @@ type GNPMetadata struct {
 }
 
 type GNPSpec struct {
-	Order    uint64        `json:"order" yaml:"order"`
+	Order    uint32        `json:"order" yaml:"order"`
 	Selector string        `json:"selector,omitempty" yaml:"selector"`
 	Ingress  []GNPSpecRule `json:"ingress,omitempty" yaml:"ingress"`
 	Egress   []GNPSpecRule `json:"egress,omitempty" yaml:"egress"`
@@ -28,8 +28,8 @@ type GNPSpec struct {
 type GNPSpecRule struct {
 	Metadata    map[string]string  `json:"metadata,omitempty" yaml:"metadata"`
 	Action      string             `json:"action" yaml:"action"`
-	Protocol    string             `json:"protocol,omitempty" yaml:"protocol"`
-	NotProtocol string             `json:"notProtocol,omitempty" yaml:"notProtocol"`
+	Protocol    interface{}        `json:"protocol,omitempty" yaml:"protocol"`
+	NotProtocol interface{}        `json:"notProtocol,omitempty" yaml:"notProtocol"`
 	IPVersion   int                `json:"ipVersion" yaml:"ipVersion"`
 	Source      *GNPSpecRuleEntity `json:"source,omitempty" yaml:"source"`
 	Destination *GNPSpecRuleEntity `json:"destination,omitempty" yaml:"destination"`
@@ -55,7 +55,7 @@ type GNPMetadataInput struct {
 }
 
 type GNPSpecInput struct {
-	Order    *uint64            `json:"order" yaml:"order"`
+	Order    *uint32            `json:"order" yaml:"order"`
 	Selector string             `json:"selector" yaml:"selector" validate:"omitempty,selector"`
 	Ingress  []GNPSpecRuleInput `json:"ingress" yaml:"ingress" validate:"omitempty,min=1,dive"`
 	Egress   []GNPSpecRuleInput `json:"egress" yaml:"egress" validate:"omitempty,min=1,dive"`
@@ -64,8 +64,8 @@ type GNPSpecInput struct {
 type GNPSpecRuleInput struct {
 	Metadata    map[string]string       `json:"metadata" yaml:"metadata"`
 	Action      string                  `json:"action" yaml:"action" validate:"required,action"`
-	Protocol    string                  `json:"protocol" yaml:"protocol" validate:"omitempty,protocol"`
-	NotProtocol string                  `json:"notProtocol" yaml:"notProtocol" validate:"omitempty,protocol"`
+	Protocol    interface{}             `json:"protocol" yaml:"protocol" validate:"omitempty,protocol"`
+	NotProtocol interface{}             `json:"notProtocol" yaml:"notProtocol" validate:"omitempty,protocol"`
 	IPVersion   int                     `json:"ipVersion" yaml:"ipVersion" validate:"required,ip_version"`
 	Source      *GNPSpecRuleEntityInput `json:"source" yaml:"source" validate:"omitempty"`
 	Destination *GNPSpecRuleEntityInput `json:"destination" yaml:"destination" validate:"omitempty"`
@@ -85,4 +85,8 @@ type GetGNPInput struct {
 
 type DeleteGlobalNetworkPolicyInput struct {
 	Metadata GNPMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
+}
+
+type ListGNPsInput struct {
+	IsOrder bool `form:"isOrder"`
 }

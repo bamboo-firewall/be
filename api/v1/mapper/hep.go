@@ -7,6 +7,14 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
+func ToListHostEndpointDTOs(heps []*entity.HostEndpoint) []*dto.HostEndpoint {
+	var hepDTOs []*dto.HostEndpoint
+	for _, hep := range heps {
+		hepDTOs = append(hepDTOs, ToHostEndpointDTO(hep))
+	}
+	return hepDTOs
+}
+
 func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 	if hep == nil {
 		return nil
@@ -47,13 +55,57 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 	}
 }
 
-func ToFetchHostEndPointPolicyInput(in *dto.FetchHostEndpointPolicyInput) *model.FetchHostEndpointPolicyInput {
-	return &model.FetchHostEndpointPolicyInput{
-		Name: in.Name,
+func ToGetHostEndpointInput(in *dto.GetHostEndpointInput) *model.GetHostEndpointInput {
+	var ipInt uint32
+	netIP := net.ParseIP(in.IP)
+	if netIP != nil {
+		ipInt = net.IPToInt(*netIP)
+	}
+	return &model.GetHostEndpointInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
 	}
 }
 
-func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.HostEndpointPolicy {
+func ToListHostEndpointsInput(in *dto.ListHEPsInput) *model.ListHostEndpointsInput {
+	var ipInt *uint32
+	if in.IP != nil {
+		netIP := net.ParseIP(*in.IP)
+		if netIP != nil {
+			ip := net.IPToInt(*netIP)
+			ipInt = &ip
+		}
+	}
+	return &model.ListHostEndpointsInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
+	}
+}
+
+func ToFetchHostEndpointPolicyInput(in *dto.FetchHostEndpointPoliciesInput) *model.ListHostEndpointsInput {
+	var ipInt *uint32
+	if in.IP != nil {
+		netIP := net.ParseIP(*in.IP)
+		if netIP != nil {
+			ip := net.IPToInt(*netIP)
+			ipInt = &ip
+		}
+	}
+	return &model.ListHostEndpointsInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
+	}
+}
+
+func ToFetchHEPPoliciesOutput(hepPolicies []*model.HostEndpointPolicy) []*dto.HostEndpointPolicy {
+	var result []*dto.HostEndpointPolicy
+	for _, hepPolicy := range hepPolicies {
+		result = append(result, ToFetchHEPPolicyOutput(hepPolicy))
+	}
+	return result
+}
+
+func ToFetchHEPPolicyOutput(hostEndpointPolicy *model.HostEndpointPolicy) *dto.HostEndpointPolicy {
 	parsedGNPDTOs := make([]*dto.ParsedGNP, len(hostEndpointPolicy.ParsedGNPs))
 	for i, policy := range hostEndpointPolicy.ParsedGNPs {
 		parsedGNPDTOs[i] = toParsedGNPDTO(policy)
@@ -67,7 +119,7 @@ func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.Ho
 		parsedGNSDTOs[i] = toParsedGNSDTO(set)
 	}
 	return &dto.HostEndpointPolicy{
-		MetaData: dto.HostEndPointPolicyMetadata{
+		MetaData: dto.HostEndpointPolicyMetadata{
 			HEPVersions: hostEndpointPolicy.MetaData.HEPVersions,
 			GNPVersions: hostEndpointPolicy.MetaData.GNPVersions,
 			GNSVersions: hostEndpointPolicy.MetaData.GNSVersions,

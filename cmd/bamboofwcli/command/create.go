@@ -25,10 +25,10 @@ var createCMD = &cobra.Command{
     * GlobalNetworkSet(or gns)
     * GlobalNetworkPolicy(or gnp)`,
 	Example: `  # Create a global network policy
-  bbfwcli create gnp -f policy.yaml
+  bbfw create gnp -f policy.yaml
 
   # Create many global network policy
-  bbfwcli create gnp -f policy1.yaml policy2.yaml`,
+  bbfw create gnp -f policy1.yaml policy2.yaml`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := create(cmd, args); err != nil {

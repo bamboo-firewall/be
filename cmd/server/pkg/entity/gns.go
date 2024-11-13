@@ -3,14 +3,13 @@ package entity
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
 	GNSV4Empty = GlobalNetworkSet{
 		ID:      primitive.NewObjectID(),
-		UUID:    uuid.New().String(),
+		UUID:    NewMinifyUUID(),
 		Version: 1,
 		Metadata: GNSMetadata{
 			Name: "v4-empty",
@@ -24,7 +23,7 @@ var (
 
 	GNSV6Empty = GlobalNetworkSet{
 		ID:      primitive.NewObjectID(),
-		UUID:    uuid.New().String(),
+		UUID:    NewMinifyUUID(),
 		Version: 1,
 		Metadata: GNSMetadata{
 			Name: "v6-empty",

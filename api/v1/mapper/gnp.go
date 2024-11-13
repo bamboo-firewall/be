@@ -6,6 +6,14 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
+func ToListGlobalNetworkPolicyDTOs(gnps []*entity.GlobalNetworkPolicy) []*dto.GlobalNetworkPolicy {
+	var gnpDTOs []*dto.GlobalNetworkPolicy
+	for _, gnp := range gnps {
+		gnpDTOs = append(gnpDTOs, ToGlobalNetworkPolicyDTO(gnp))
+	}
+	return gnpDTOs
+}
+
 func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetworkPolicy {
 	if gnp == nil {
 		return nil

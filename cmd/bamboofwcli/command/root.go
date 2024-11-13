@@ -22,6 +22,7 @@ Description:
 
 func Execute() {
 	rootCMD.AddCommand(createCMD)
+	rootCMD.AddCommand(listCMD)
 	rootCMD.AddCommand(getCMD)
 	rootCMD.AddCommand(deleteCMD)
 	rootCMD.AddCommand(versionCMD)
@@ -31,10 +32,10 @@ func Execute() {
 		DisableFlagsInUseLine: true,
 		Short:                 "Generate bash completion script for shell(bash, zsh)",
 		Example: `  # Gen completion for bash shell
-  bbfwcli completion bash
+  bbfw completion bash
 
   # Gen completion for zsh shell
-  bbfwcli completion zsh`,
+  bbfw completion zsh`,
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			switch args[0] {

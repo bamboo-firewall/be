@@ -76,8 +76,16 @@ func validateIPVersion(fl validator.FieldLevel) bool {
 }
 
 func validateProtocol(fl validator.FieldLevel) bool {
-	protocol := fl.Field().Interface().(string)
-	return slices.Contains([]entity.Protocol{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolICMP, entity.ProtocolSCTP}, entity.Protocol(strings.ToLower(protocol)))
+	protocol := fl.Field().Interface()
+	switch protocol.(type) {
+	case string:
+		return slices.Contains([]string{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolICMP, entity.ProtocolSCTP, entity.ProtocolUDPLite}, strings.ToLower(protocol.(string)))
+	case float64:
+		protocolNum := uint8(protocol.(float64))
+		return protocolNum != 0
+	default:
+		return false
+	}
 }
 
 func validateCIDR(fl validator.FieldLevel) bool {
@@ -143,11 +151,11 @@ func validateGNPSpecInput(sl validator.StructLevel) {
 
 func validateGNPSpecRuleInput(sl validator.StructLevel) {
 	input := sl.Current().Interface().(dto.GNPSpecRuleInput)
-	if input.Protocol != "" && input.NotProtocol != "" {
+	if input.Protocol != nil && input.NotProtocol != nil {
 		sl.ReportError(input.NotProtocol, "notProtocol", "NotProtocol", "cannot use notProtocol with protocol", "")
 	}
-	if input.Protocol != "" || input.NotProtocol != "" {
-		if (input.Protocol != "" && !isProtocolSupportPort(input.Protocol)) || (input.NotProtocol != "" && !isProtocolSupportPort(input.NotProtocol)) {
+	if input.Protocol != nil || input.NotProtocol != nil {
+		if (input.Protocol != nil && !isProtocolSupportPort(input.Protocol)) || (input.NotProtocol != nil && !isProtocolSupportPort(input.NotProtocol)) {
 			if input.Source != nil {
 				if len(input.Source.Ports) > 0 {
 					sl.ReportError(input.Source.Ports, "notPorts", "NotPorts", "protocol not support ports", "")
@@ -178,8 +186,16 @@ func validateGNPSpecRuleInput(sl validator.StructLevel) {
 	}
 }
 
-func isProtocolSupportPort(protocol string) bool {
-	return slices.Contains([]entity.Protocol{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolSCTP}, entity.Protocol(strings.ToLower(protocol)))
+func isProtocolSupportPort(protocol interface{}) bool {
+	switch protocol.(type) {
+	case string:
+		return slices.Contains([]string{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolSCTP}, strings.ToLower(protocol.(string)))
+	case float64:
+		protocolNum := uint8(protocol.(float64))
+		return protocolNum == entity.ProtocolNumTCP || protocolNum == entity.ProtocolNumUDP || protocolNum == entity.ProtocolNumSCTP
+	default:
+		return false
+	}
 }
 
 func isNetSameIPVersion(sl validator.StructLevel, ipVersion int, nets []string) {

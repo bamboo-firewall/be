@@ -1,5 +1,11 @@
 package entity
 
+import (
+	"strings"
+
+	"github.com/google/uuid"
+)
+
 type IPVersion int
 
 const (
@@ -7,11 +13,18 @@ const (
 	IPVersion6 IPVersion = 6
 )
 
-type Protocol string
-
 const (
-	ProtocolTCP  Protocol = "tcp"
-	ProtocolUDP  Protocol = "udp"
-	ProtocolICMP Protocol = "icmp"
-	ProtocolSCTP Protocol = "sctp"
+	ProtocolTCP     = "tcp"
+	ProtocolUDP     = "udp"
+	ProtocolICMP    = "icmp"
+	ProtocolSCTP    = "sctp"
+	ProtocolUDPLite = "udplite"
+
+	ProtocolNumTCP  = 6
+	ProtocolNumUDP  = 17
+	ProtocolNumSCTP = 132
 )
+
+func NewMinifyUUID() string {
+	return strings.Replace(uuid.New().String(), "-", "", -1)
+}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
@@ -29,6 +30,28 @@ func (c *apiServer) CreateGNP(ctx context.Context, input *dto.CreateGlobalNetwor
 	}
 
 	return nil
+}
+
+func (c *apiServer) ListGNPs(ctx context.Context, input *dto.ListGNPsInput) ([]*dto.GlobalNetworkPolicy, error) {
+	res := c.client.NewRequest().
+		SetSubURL("/api/v1/globalNetworkPolicies").
+		SetParam("isOrder", strconv.FormatBool(input.IsOrder)).
+		SetMethod(http.MethodGet).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to list gnp by name: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code when list gnp, status code: %d, response: %s", res.StatusCode, res.Body)
+	}
+
+	var gnps []*dto.GlobalNetworkPolicy
+	if err := json.Unmarshal(res.Body, &gnps); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when list gnp, response: %s, err: %w", string(res.Body), err)
+	}
+	return gnps, nil
 }
 
 func (c *apiServer) GetGNP(ctx context.Context, input *dto.GetGNPInput) (*dto.GlobalNetworkPolicy, error) {
