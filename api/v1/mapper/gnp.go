@@ -54,7 +54,7 @@ func toRuleDTO(rule entity.GNPSpecRule) dto.GNPSpecRule {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
-		IPVersion:   int(rule.IPVersion),
+		IPVersion:   rule.IPVersion,
 		Source:      toRuleEntityDTO(rule.Source),
 		Destination: toRuleEntityDTO(rule.Destination),
 	}

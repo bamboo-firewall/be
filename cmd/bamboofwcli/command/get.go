@@ -101,7 +101,12 @@ func get(cmd *cobra.Command, args []string) error {
 	var output []byte
 	switch common.FileExtension(outputFormat) {
 	case common.FileExtensionJSON:
-		output, err = json.MarshalIndent(resource, "", "  ")
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
+		err = encoder.Encode(resource)
+		output = buf.Bytes()
 	default:
 		var buf bytes.Buffer
 		yamlEncoder := yaml.NewEncoder(&buf)

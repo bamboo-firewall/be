@@ -67,7 +67,7 @@ type ParsedGNP struct {
 
 type ParsedRule struct {
 	Action             string
-	IPVersion          int
+	IPVersion          *int
 	Protocol           interface{}
 	IsProtocolNegative bool
 	SrcNets            []string

@@ -12,6 +12,7 @@ import (
 	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
 	"github.com/bamboo-firewall/be/domain/model"
 )
@@ -103,7 +104,7 @@ func modelToRule(rule model.GNPSpecRuleInput) entity.GNPSpecRule {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
-		IPVersion:   entity.IPVersion(rule.IPVersion),
+		IPVersion:   rule.IPVersion,
 		Source:      modelToRuleEntity(rule.Source),
 		Destination: modelToRuleEntity(rule.Destination),
 	}
@@ -115,9 +116,20 @@ func modelToRuleEntity(ruleEntity *model.GNPSpecRuleEntityInput) *entity.GNPSpec
 	}
 	return &entity.GNPSpecRuleEntity{
 		Selector: ruleEntity.Selector,
-		Nets:     ruleEntity.Nets,
-		NotNets:  ruleEntity.NotNets,
+		Nets:     parseNets(ruleEntity.Nets),
+		NotNets:  parseNets(ruleEntity.NotNets),
 		Ports:    ruleEntity.Ports,
 		NotPorts: ruleEntity.NotPorts,
 	}
+}
+
+func parseNets(nets []string) []string {
+	var netResults []string
+	for _, n := range nets {
+		_, ipnet, err := net.ParseCIDROrIP(n)
+		if err == nil {
+			netResults = append(netResults, ipnet.String())
+		}
+	}
+	return netResults
 }

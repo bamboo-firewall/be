@@ -36,7 +36,7 @@ by tenantID,IP(Host Endpoint) or filename.
   bbfw delete gnp allow_ssh allow_ping
 
   # Delete many policy with filename
-  bbfw delete gnp -f allow_ssh.yaml allow_ping.yaml
+  bbfw delete gnp -f allow_ssh.yaml -f allow_ping.yaml
 
   # Delete a set with name
   bbfw delete gns server
@@ -45,13 +45,13 @@ by tenantID,IP(Host Endpoint) or filename.
   bbfw delete gns server vm
 
   # Delete many policy with filename
-  bbfw delete gns -f server.yaml vm.yaml
+  bbfw delete gns -f server.yaml -f vm.yaml
 
   # Delete a hep with tenantID and ip
   bbfw delete hep --tenantID=1 --ip=192.168.1.1
 
   # Delete many hep with filename
-  bbfw delete hep -f server.yaml vm.yaml
+  bbfw delete hep -f server.yaml -f vm.yaml
 `,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -153,7 +153,7 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 	for _, r := range resources {
 		err = resourceMgr.Delete(context.Background(), apiServer, r.Content)
 		if err != nil {
-			fmt.Printf("fail to delete resource from: %v\n", err)
+			fmt.Printf("fail to delete resource %s from: %v\n", r.Name, err)
 		} else {
 			fmt.Printf("successsfully deleted resource from %s\n", r.Name)
 			numHandled++

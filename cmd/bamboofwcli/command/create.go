@@ -28,7 +28,7 @@ var createCMD = &cobra.Command{
   bbfw create gnp -f policy.yaml
 
   # Create many global network policy
-  bbfw create gnp -f policy1.yaml policy2.yaml`,
+  bbfw create gnp -f policy1.yaml -f policy2.yaml`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := create(cmd, args); err != nil {
@@ -70,7 +70,7 @@ func create(cmd *cobra.Command, args []string) error {
 	for _, r := range resources {
 		err = resourceMgr.Create(context.Background(), apiServer, r.Content)
 		if err != nil {
-			fmt.Printf("Fail to create resource. Error: %v\n", err)
+			fmt.Printf("Fail to create resource: %s. Error: %v\n", r.Name, err)
 		} else {
 			fmt.Printf("Successsfully created resource from %s\n", r.Name)
 			numHandled++

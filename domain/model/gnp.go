@@ -23,7 +23,7 @@ type GNPSpecRuleInput struct {
 	Action      string
 	Protocol    interface{}
 	NotProtocol interface{}
-	IPVersion   int
+	IPVersion   *int
 	Source      *GNPSpecRuleEntityInput
 	Destination *GNPSpecRuleEntityInput
 }

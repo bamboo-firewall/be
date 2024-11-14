@@ -6,11 +6,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type IPVersion int
-
 const (
-	IPVersion4 IPVersion = 4
-	IPVersion6 IPVersion = 6
+	IPVersion4 = 4
+	IPVersion6 = 6
 )
 
 const (

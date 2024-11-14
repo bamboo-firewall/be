@@ -32,7 +32,7 @@ func (r *PolicyDB) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpo
 			return nil, errlist.ErrDatabase.WithChild(fmt.Errorf("find host endpoint failed: %w", err))
 		}
 
-		// hep is not exist
+		// hep is existed
 		if !errors.Is(mongo.ErrNoDocuments, err) {
 			hep.ID = existedHEP.ID
 			hep.UUID = existedHEP.UUID

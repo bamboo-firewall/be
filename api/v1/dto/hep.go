@@ -88,7 +88,7 @@ type ParsedGNP struct {
 
 type ParsedRule struct {
 	Action             string      `json:"action"`
-	IPVersion          int         `json:"ipVersion"`
+	IPVersion          *int        `json:"ipVersion"`
 	Protocol           interface{} `json:"protocol"`
 	IsProtocolNegative bool        `json:"isProtocolNegative"`
 	SrcNets            []string    `json:"srcNets"`

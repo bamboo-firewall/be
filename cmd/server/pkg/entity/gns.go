@@ -7,29 +7,12 @@ import (
 )
 
 var (
-	GNSV4Empty = GlobalNetworkSet{
+	GNSEmpty = GlobalNetworkSet{
 		ID:      primitive.NewObjectID(),
 		UUID:    NewMinifyUUID(),
 		Version: 1,
 		Metadata: GNSMetadata{
-			Name: "v4-empty",
-		},
-		Spec: GNSSpec{
-			NetsV4: []string{""},
-		},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	GNSV6Empty = GlobalNetworkSet{
-		ID:      primitive.NewObjectID(),
-		UUID:    NewMinifyUUID(),
-		Version: 1,
-		Metadata: GNSMetadata{
-			Name: "v6-empty",
-		},
-		Spec: GNSSpec{
-			NetsV6: []string{""},
+			Name: "default-empty",
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

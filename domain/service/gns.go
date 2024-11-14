@@ -70,9 +70,9 @@ func exactNets(nets []string) (netsV4 []string, netsV6 []string) {
 		} else {
 			netV4V6 = ip.Network().String()
 		}
-		if ip.Version() == int(entity.IPVersion4) {
+		if ip.Version() == entity.IPVersion4 {
 			netsV4 = append(netsV4, netV4V6)
-		} else if ip.Version() == int(entity.IPVersion6) {
+		} else if ip.Version() == entity.IPVersion6 {
 			netsV6 = append(netsV6, netV4V6)
 		}
 	}

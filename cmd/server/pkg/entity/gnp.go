@@ -45,7 +45,7 @@ type GNPSpec struct {
 type GNPSpecRule struct {
 	Metadata    map[string]string  `bson:"metadata,omitempty"`
 	Action      string             `bson:"action"`
-	IPVersion   IPVersion          `bson:"ip_version"`
+	IPVersion   *int               `bson:"ip_version,omitempty"`
 	Protocol    interface{}        `bson:"protocol,omitempty"`
 	NotProtocol interface{}        `bson:"not_protocol,omitempty"`
 	Source      *GNPSpecRuleEntity `bson:"source,omitempty"`

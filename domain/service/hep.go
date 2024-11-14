@@ -68,7 +68,6 @@ func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput)
 	}
 	hepEntity, coreErr := ds.storage.UpsertHostEndpoint(ctx, hepEntity)
 	if coreErr != nil {
-		slog.Error("warning", "err", coreErr)
 		if errors.Is(coreErr, errlist.ErrDuplicateHostEndpoint) {
 			return nil, httpbase.ErrBadRequest(ctx, "duplicate host endpoint").SetSubError(coreErr)
 		}
@@ -251,7 +250,50 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 		isProtocolNegative = true
 	}
 
-	// get global network set match if selector is available
+	var ruleIPVersion int
+	if rule.Source != nil {
+		if len(rule.Source.Nets) > 0 {
+			ip, _, err := net.ParseCIDR(rule.Source.Nets[0])
+			if err == nil {
+				ruleIPVersion = ip.Version()
+			}
+
+			srcNets = rule.Source.Nets
+			isSrcNetNegative = false
+		} else if len(rule.Source.Nets) > 0 {
+			ip, _, err := net.ParseCIDR(rule.Source.NotNets[0])
+			if err == nil {
+				ruleIPVersion = ip.Version()
+			}
+
+			srcNets = rule.Source.NotNets
+			isSrcNetNegative = true
+		}
+	}
+	if rule.Destination != nil {
+		if len(rule.Destination.Nets) > 0 {
+			ip, _, err := net.ParseCIDR(rule.Destination.Nets[0])
+			if err == nil {
+				ruleIPVersion = ip.Version()
+			}
+
+			dstNets = rule.Destination.Nets
+			isDstNetNegative = false
+		} else if len(rule.Destination.NotNets) > 0 {
+			ip, _, err := net.ParseCIDR(rule.Destination.NotNets[0])
+			if err == nil {
+				ruleIPVersion = ip.Version()
+			}
+
+			dstNets = rule.Destination.NotNets
+			isDstNetNegative = true
+		}
+	}
+	if rule.IPVersion == nil && ruleIPVersion > 0 {
+		rule.IPVersion = &ruleIPVersion
+	}
+
+	// get host endpoint and global network set match if selector is available
 	if rule.Source != nil {
 		if len(rule.Source.Selector) > 0 {
 			hepUUIDs, gnsUUIDs, err := r.handleSelector(rule.Source.Selector, rule.IPVersion, heps, gnss)
@@ -266,13 +308,6 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 			}
 		}
 
-		if len(rule.Source.Nets) > 0 {
-			srcNets = rule.Source.Nets
-			isSrcNetNegative = false
-		} else if len(rule.Source.Nets) > 0 {
-			srcNets = rule.Source.NotNets
-			isSrcNetNegative = true
-		}
 		if len(rule.Source.Ports) > 0 {
 			srcPorts = convertPorts(rule.Source.Ports)
 			isSrcPortNegative = false
@@ -296,13 +331,6 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 			}
 		}
 
-		if len(rule.Destination.Nets) > 0 {
-			dstNets = rule.Destination.Nets
-			isDstNetNegative = false
-		} else if len(rule.Destination.NotNets) > 0 {
-			dstNets = rule.Destination.NotNets
-			isDstNetNegative = true
-		}
 		if len(rule.Destination.Ports) > 0 {
 			dstPorts = convertPorts(rule.Destination.Ports)
 			isDstPortNegative = false
@@ -313,7 +341,7 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 	}
 	return &model.ParsedRule{
 		Action:             rule.Action,
-		IPVersion:          int(rule.IPVersion),
+		IPVersion:          rule.IPVersion,
 		Protocol:           protocol,
 		IsProtocolNegative: isProtocolNegative,
 		SrcGNSUUIDs:        srcGNSUUIDs,
@@ -331,21 +359,23 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 	}
 }
 
-func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion entity.IPVersion, heps []*entity.HostEndpoint, gnss []*entity.GlobalNetworkSet) ([]string, []string, error) {
+func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion *int, heps []*entity.HostEndpoint, gnss []*entity.GlobalNetworkSet) ([]string, []string, error) {
 	var (
 		hepUUIDs []string
 		gnsUUIDs []string
 	)
 	sel, errParse := selector.Parse(selectorString)
 	if errParse != nil {
-		return nil, nil, errParse
+		return nil, nil, fmt.Errorf("parse selector for rule failed:  %w", errParse)
 	}
 	for _, ep := range heps {
 		if !sel.Evaluate(ep.Metadata.Labels) {
 			continue
 		}
-		if !((ruleIPVersion == entity.IPVersion4 && len(ep.Spec.IPsV4) > 0) || (ruleIPVersion == entity.IPVersion6 && len(ep.Spec.IPsV6) > 0)) {
-			continue
+		if ruleIPVersion != nil {
+			if !((*ruleIPVersion == entity.IPVersion4 && len(ep.Spec.IPsV4) > 0) || (*ruleIPVersion == entity.IPVersion6 && len(ep.Spec.IPsV6) > 0)) {
+				continue
+			}
 		}
 		hepUUIDs = append(hepUUIDs, ep.UUID)
 		if _, ok := r.parsedHEPsMap[ep.UUID]; !ok {
@@ -359,8 +389,10 @@ func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion entity.
 		if !sel.Evaluate(set.Metadata.Labels) {
 			continue
 		}
-		if !((ruleIPVersion == entity.IPVersion4 && len(set.Spec.NetsV4) > 0) || (ruleIPVersion == entity.IPVersion6 && len(set.Spec.NetsV6) > 0)) {
-			continue
+		if ruleIPVersion != nil {
+			if !((*ruleIPVersion == entity.IPVersion4 && len(set.Spec.NetsV4) > 0) || (*ruleIPVersion == entity.IPVersion6 && len(set.Spec.NetsV6) > 0)) {
+				continue
+			}
 		}
 		gnsUUIDs = append(gnsUUIDs, set.UUID)
 		if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
@@ -372,12 +404,7 @@ func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion entity.
 
 	// if selector not match any hep and gns. Using match empty to prevent
 	if len(gnsUUIDs) == 0 && len(hepUUIDs) == 0 {
-		var set entity.GlobalNetworkSet
-		if ruleIPVersion == entity.IPVersion4 {
-			set = entity.GNSV4Empty
-		} else if ruleIPVersion == entity.IPVersion6 {
-			set = entity.GNSV6Empty
-		}
+		set := entity.GNSEmpty
 		gnsUUIDs = append(gnsUUIDs, set.UUID)
 		if _, ok := r.parsedGNSsMap[set.UUID]; !ok {
 			r.parsedGNSsMap[set.UUID] = struct{}{}

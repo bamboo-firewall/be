@@ -32,7 +32,7 @@ func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetw
 			return nil, errlist.ErrDatabase.WithChild(fmt.Errorf("find global network policy failed: %w", err))
 		}
 
-		// gnp is not exist
+		// gnp is existed
 		if !errors.Is(mongo.ErrNoDocuments, err) {
 			gnp.ID = existedGNP.ID
 			gnp.UUID = existedGNP.UUID

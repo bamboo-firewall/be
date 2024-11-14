@@ -31,7 +31,7 @@ func (r *PolicyDB) UpsertGNS(ctx context.Context, gns *entity.GlobalNetworkSet) 
 			return nil, errlist.ErrDatabase.WithChild(fmt.Errorf("find global network set failed: %w", err))
 		}
 
-		// gns is not exist
+		// gns is existed
 		if !errors.Is(mongo.ErrNoDocuments, err) {
 			gns.ID = existedGNS.ID
 			gns.UUID = existedGNS.UUID
@@ -85,8 +85,7 @@ func (r *PolicyDB) GetGNSByName(ctx context.Context, name string) (*entity.Globa
 	err := r.mongo.Database.Collection(gns.CollectionName()).FindOne(ctx, filter).Decode(gns)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, errlist.ErrNotFoundGlobalNetworkSet.
-				WithChild(fmt.Errorf("global network set already exists: %w", err))
+			return nil, errlist.ErrNotFoundGlobalNetworkSet
 		}
 		return nil, errlist.ErrDatabase.WithChild(fmt.Errorf("find global network set failed: %w", err))
 	}

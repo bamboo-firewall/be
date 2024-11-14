@@ -30,7 +30,7 @@ type GNPSpecRule struct {
 	Action      string             `json:"action" yaml:"action"`
 	Protocol    interface{}        `json:"protocol,omitempty" yaml:"protocol"`
 	NotProtocol interface{}        `json:"notProtocol,omitempty" yaml:"notProtocol"`
-	IPVersion   int                `json:"ipVersion" yaml:"ipVersion"`
+	IPVersion   *int               `json:"ipVersion,omitempty" yaml:"ipVersion"`
 	Source      *GNPSpecRuleEntity `json:"source,omitempty" yaml:"source"`
 	Destination *GNPSpecRuleEntity `json:"destination,omitempty" yaml:"destination"`
 }
@@ -66,7 +66,7 @@ type GNPSpecRuleInput struct {
 	Action      string                  `json:"action" yaml:"action" validate:"required,action"`
 	Protocol    interface{}             `json:"protocol" yaml:"protocol" validate:"omitempty,protocol"`
 	NotProtocol interface{}             `json:"notProtocol" yaml:"notProtocol" validate:"omitempty,protocol"`
-	IPVersion   int                     `json:"ipVersion" yaml:"ipVersion" validate:"required,ip_version"`
+	IPVersion   *int                    `json:"ipVersion" yaml:"ipVersion" validate:"omitempty,ip_version"`
 	Source      *GNPSpecRuleEntityInput `json:"source" yaml:"source" validate:"omitempty"`
 	Destination *GNPSpecRuleEntityInput `json:"destination" yaml:"destination" validate:"omitempty"`
 }
@@ -75,8 +75,8 @@ type GNPSpecRuleEntityInput struct {
 	Selector string        `json:"selector" yaml:"selector" validate:"omitempty,selector"`
 	Nets     []string      `json:"nets" yaml:"nets" validate:"omitempty,min=1,unique"`
 	NotNets  []string      `json:"notNets" yaml:"notNets" validate:"omitempty,min=1,unique"`
-	Ports    []interface{} `json:"ports" yaml:"ports" validate:"omitempty,min=1,unique,dive"`
-	NotPorts []interface{} `json:"notPorts" yaml:"notPorts" validate:"omitempty,min=1,unique,dive"`
+	Ports    []interface{} `json:"ports" yaml:"ports" validate:"omitempty,min=1,unique,dive,port"`
+	NotPorts []interface{} `json:"notPorts" yaml:"notPorts" validate:"omitempty,min=1,unique,dive,port"`
 }
 
 type GetGNPInput struct {
