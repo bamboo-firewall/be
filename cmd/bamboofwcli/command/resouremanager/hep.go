@@ -19,7 +19,7 @@ func (h *hep) Create(ctx context.Context, apiServer APIServer, resource interfac
 }
 
 func (h *hep) List(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
-	r := resource.(*dto.ListHEPsInput)
+	r := resource.(*dto.ListHostEndpointsInput)
 	return apiServer.ListHEPs(ctx, r)
 }
 

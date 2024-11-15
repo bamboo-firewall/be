@@ -8,7 +8,7 @@ import (
 )
 
 func ToListHostEndpointDTOs(heps []*entity.HostEndpoint) []*dto.HostEndpoint {
-	var hepDTOs []*dto.HostEndpoint
+	hepDTOs := make([]*dto.HostEndpoint, 0, len(heps))
 	for _, hep := range heps {
 		hepDTOs = append(hepDTOs, ToHostEndpointDTO(hep))
 	}
@@ -67,7 +67,7 @@ func ToGetHostEndpointInput(in *dto.GetHostEndpointInput) *model.GetHostEndpoint
 	}
 }
 
-func ToListHostEndpointsInput(in *dto.ListHEPsInput) *model.ListHostEndpointsInput {
+func ToListHostEndpointsInput(in *dto.ListHostEndpointsInput) *model.ListHostEndpointsInput {
 	var ipInt *uint32
 	if in.IP != nil {
 		netIP := net.ParseIP(*in.IP)
@@ -98,7 +98,7 @@ func ToFetchHostEndpointPolicyInput(in *dto.FetchHostEndpointPoliciesInput) *mod
 }
 
 func ToFetchHEPPoliciesOutput(hepPolicies []*model.HostEndpointPolicy) []*dto.HostEndpointPolicy {
-	var result []*dto.HostEndpointPolicy
+	result := make([]*dto.HostEndpointPolicy, 0, len(hepPolicies))
 	for _, hepPolicy := range hepPolicies {
 		result = append(result, ToFetchHEPPolicyOutput(hepPolicy))
 	}

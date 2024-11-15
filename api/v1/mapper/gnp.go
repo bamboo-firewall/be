@@ -7,7 +7,7 @@ import (
 )
 
 func ToListGlobalNetworkPolicyDTOs(gnps []*entity.GlobalNetworkPolicy) []*dto.GlobalNetworkPolicy {
-	var gnpDTOs []*dto.GlobalNetworkPolicy
+	gnpDTOs := make([]*dto.GlobalNetworkPolicy, 0, len(gnps))
 	for _, gnp := range gnps {
 		gnpDTOs = append(gnpDTOs, ToGlobalNetworkPolicyDTO(gnp))
 	}
@@ -74,12 +74,12 @@ func toRuleEntityDTO(ruleEntity *entity.GNPSpecRuleEntity) *dto.GNPSpecRuleEntit
 }
 
 func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *model.CreateGlobalNetworkPolicyInput {
-	var specIngress []model.GNPSpecRuleInput
+	specIngress := make([]model.GNPSpecRuleInput, 0, len(in.Spec.Ingress))
 	for _, rule := range in.Spec.Ingress {
 		specIngress = append(specIngress, toRuleInput(rule))
 	}
 
-	var specEgress []model.GNPSpecRuleInput
+	specEgress := make([]model.GNPSpecRuleInput, 0, len(in.Spec.Egress))
 	for _, rule := range in.Spec.Egress {
 		specEgress = append(specEgress, toRuleInput(rule))
 	}

@@ -27,7 +27,7 @@ type Resource interface {
 
 type APIServer interface {
 	CreateHEP(ctx context.Context, input *dto.CreateHostEndpointInput) error
-	ListHEPs(ctx context.Context, input *dto.ListHEPsInput) ([]*dto.HostEndpoint, error)
+	ListHEPs(ctx context.Context, input *dto.ListHostEndpointsInput) ([]*dto.HostEndpoint, error)
 	GetHEP(ctx context.Context, input *dto.GetHostEndpointInput) (*dto.HostEndpoint, error)
 	DeleteHEP(ctx context.Context, input *dto.DeleteHostEndpointInput) error
 	CreateGNS(ctx context.Context, input *dto.CreateGlobalNetworkSetInput) error

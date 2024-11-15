@@ -45,7 +45,7 @@ type HostEndpointSpecInput struct {
 	IPs           []string `json:"ips" yaml:"ips" validate:"min=1,unique,dive,ip"`
 }
 
-type ListHEPsInput struct {
+type ListHostEndpointsInput struct {
 	TenantID *uint64 `form:"tenantID" yaml:"tenantID" validate:"omitempty"`
 	IP       *string `form:"ip" yaml:"ip" validate:"omitempty,ip"`
 }

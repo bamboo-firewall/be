@@ -7,7 +7,7 @@ import (
 )
 
 func ToListGlobalNetworkSetDTOs(gnss []*entity.GlobalNetworkSet) []*dto.GlobalNetworkSet {
-	var gnsDTOs []*dto.GlobalNetworkSet
+	gnsDTOs := make([]*dto.GlobalNetworkSet, 0, len(gnss))
 	for _, gns := range gnss {
 		gnsDTOs = append(gnsDTOs, ToGlobalNetworkSetDTO(gns))
 	}

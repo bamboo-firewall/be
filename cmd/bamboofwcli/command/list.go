@@ -26,7 +26,7 @@ var (
 var listCMD = &cobra.Command{
 	Use:   "list",
 	Short: "List resource",
-	Example: `  # List global network policy
+	Example: `  # List global network sets
   bbfw list gns
 
   # List global network policy
@@ -72,7 +72,7 @@ func list(cmd *cobra.Command, args []string) error {
 	var input interface{}
 	switch resourceMgr.GetResourceType() {
 	case resouremanager.ResourceTypeHEP:
-		listHEPsInput := &dto.ListHEPsInput{}
+		listHEPsInput := &dto.ListHostEndpointsInput{}
 		if ListHEPsByTenantID > 0 {
 			listHEPsInput.TenantID = &ListHEPsByTenantID
 		}
@@ -127,12 +127,12 @@ func printResources(resourceMgr resouremanager.Resource, resources interface{}) 
 
 	tmpl, err := template.New("list").Parse(buf.String())
 	if err != nil {
-		return fmt.Errorf("parse template failed: %v", err)
+		return fmt.Errorf("parse template failed: %w", err)
 	}
 	writer := tabwriter.NewWriter(os.Stdout, 5, 1, 3, ' ', 0)
 	err = tmpl.Execute(writer, resources)
 	if err != nil {
-		return fmt.Errorf("execute template failed: %v", err)
+		return fmt.Errorf("execute template failed: %w", err)
 	}
 	writer.Flush()
 	fmt.Printf("\n")

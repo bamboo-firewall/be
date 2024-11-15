@@ -153,13 +153,6 @@ func (ds *hep) FetchPolicies(ctx context.Context, input *model.ListHostEndpoints
 		hepPolicies []*model.HostEndpointPolicy
 	)
 
-	rp := &ruleParser{
-		parsedHEPsMap: make(map[string]struct{}),
-		hepVersions:   make(map[string]uint),
-		parsedGNSsMap: make(map[string]struct{}),
-		gnsVersions:   make(map[string]uint),
-	}
-
 	for _, hepEntity := range heps {
 		if input != nil {
 			if input.TenantID != nil && input.IP != nil {
@@ -167,6 +160,13 @@ func (ds *hep) FetchPolicies(ctx context.Context, input *model.ListHostEndpoints
 					continue
 				}
 			}
+		}
+
+		rp := &ruleParser{
+			parsedHEPsMap: make(map[string]struct{}),
+			hepVersions:   make(map[string]uint),
+			parsedGNSsMap: make(map[string]struct{}),
+			gnsVersions:   make(map[string]uint),
 		}
 
 		var (
@@ -225,7 +225,8 @@ type ruleParser struct {
 	gnsVersions   map[string]uint
 }
 
-func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, heps []*entity.HostEndpoint, gnss []*entity.GlobalNetworkSet) *model.ParsedRule {
+func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.GNPSpecRule, heps []*entity.HostEndpoint,
+	gnss []*entity.GlobalNetworkSet) *model.ParsedRule {
 	var (
 		protocol           interface{}
 		isProtocolNegative bool
@@ -260,7 +261,7 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 
 			srcNets = rule.Source.Nets
 			isSrcNetNegative = false
-		} else if len(rule.Source.Nets) > 0 {
+		} else if len(rule.Source.NotNets) > 0 {
 			ip, _, err := net.ParseCIDR(rule.Source.NotNets[0])
 			if err == nil {
 				ruleIPVersion = ip.Version()
@@ -359,7 +360,8 @@ func (r *ruleParser) parseRule(policy *entity.GlobalNetworkPolicy, rule *entity.
 	}
 }
 
-func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion *int, heps []*entity.HostEndpoint, gnss []*entity.GlobalNetworkSet) ([]string, []string, error) {
+func (r *ruleParser) handleSelector(selectorString string, ruleIPVersion *int, heps []*entity.HostEndpoint,
+	gnss []*entity.GlobalNetworkSet) ([]string, []string, error) {
 	var (
 		hepUUIDs []string
 		gnsUUIDs []string

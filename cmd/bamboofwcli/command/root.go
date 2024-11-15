@@ -30,7 +30,7 @@ func Execute() {
 	rootCMD.AddCommand(&cobra.Command{
 		Use:                   "completion",
 		DisableFlagsInUseLine: true,
-		Short:                 "Generate bash completion script for shell(bash, zsh)",
+		Short:                 "Generate a completion script for bash or zsh shell",
 		Example: `  # Gen completion for bash shell
   bbfw completion bash
 
@@ -44,7 +44,7 @@ func Execute() {
 			case "zsh":
 				rootCMD.GenZshCompletion(os.Stdout)
 			default:
-				fmt.Fprintf(os.Stderr, "Unknown shell bash: %s\n", args[0])
+				fmt.Fprintf(os.Stderr, "Unknown shell: %s\n", args[0])
 			}
 		},
 	})

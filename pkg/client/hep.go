@@ -31,7 +31,7 @@ func (c *apiServer) CreateHEP(ctx context.Context, input *dto.CreateHostEndpoint
 	return nil
 }
 
-func (c *apiServer) ListHEPs(ctx context.Context, input *dto.ListHEPsInput) ([]*dto.HostEndpoint, error) {
+func (c *apiServer) ListHEPs(ctx context.Context, input *dto.ListHostEndpointsInput) ([]*dto.HostEndpoint, error) {
 	params := make(map[string]string)
 	if input != nil {
 		if input.TenantID != nil {

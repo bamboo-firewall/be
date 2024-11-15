@@ -48,7 +48,7 @@ func (h *hep) Create(c *gin.Context) {
 }
 
 func (h *hep) List(c *gin.Context) {
-	in := new(dto.ListHEPsInput)
+	in := new(dto.ListHostEndpointsInput)
 	if ierr := httpbase.BindInput(c, in); ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
