@@ -37,6 +37,8 @@ type GNSSpecInput struct {
 	Nets []string `json:"nets" yaml:"nets" validate:"min=1,unique"`
 }
 
+type ListGNSsInput struct{}
+
 type GetGNSInput struct {
 	Name string `uri:"name" validate:"required"`
 }

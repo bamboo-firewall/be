@@ -1,6 +1,7 @@
 package net
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"net"
 )
@@ -61,4 +62,17 @@ func (i IP) Network() *IPNet {
 		ipnet.Mask = net.CIDRMask(net.IPv6len*8, net.IPv6len*8)
 	}
 	return ipnet
+}
+
+func IPToInt(ip IP) uint32 {
+	if len(ip.IP) == 16 {
+		return binary.BigEndian.Uint32(ip.IP[12:16])
+	}
+	return binary.BigEndian.Uint32(ip.IP)
+}
+
+func IntToIP(nn uint32) IP {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, nn)
+	return IP{ip}
 }

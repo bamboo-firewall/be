@@ -6,6 +6,14 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
+func ToListGlobalNetworkSetDTOs(gnss []*entity.GlobalNetworkSet) []*dto.GlobalNetworkSet {
+	gnsDTOs := make([]*dto.GlobalNetworkSet, 0, len(gnss))
+	for _, gns := range gnss {
+		gnsDTOs = append(gnsDTOs, ToGlobalNetworkSetDTO(gns))
+	}
+	return gnsDTOs
+}
+
 func ToGlobalNetworkSetDTO(gns *entity.GlobalNetworkSet) *dto.GlobalNetworkSet {
 	if gns == nil {
 		return nil

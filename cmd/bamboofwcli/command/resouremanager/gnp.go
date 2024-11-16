@@ -18,6 +18,11 @@ func (p *gnp) Create(ctx context.Context, apiServer APIServer, resource interfac
 	return apiServer.CreateGNP(ctx, r)
 }
 
+func (p *gnp) List(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
+	r := resource.(*dto.ListGNPsInput)
+	return apiServer.ListGNPs(ctx, r)
+}
+
 func (p *gnp) Get(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
 	r := resource.(*dto.GetGNPInput)
 	return apiServer.GetGNP(ctx, r)
@@ -30,4 +35,17 @@ func (p *gnp) Delete(ctx context.Context, apiServer APIServer, resource interfac
 
 func (p *gnp) GetResourceType() ResourceType {
 	return ResourceTypeGNP
+}
+
+func (p *gnp) GetHeader() []string {
+	return []string{"UUID", "NAME", "ORDER", "VERSION"}
+}
+
+func (p *gnp) GetHeaderMap() map[string]string {
+	return map[string]string{
+		"UUID":    "{{.UUID}}",
+		"NAME":    "{{.Metadata.Name}}",
+		"ORDER":   "{{.Spec.Order}}",
+		"VERSION": "{{.Version}}",
+	}
 }

@@ -16,6 +16,7 @@ import (
 
 type gnsService interface {
 	Create(ctx context.Context, input *model.CreateGlobalNetworkSetInput) (*entity.GlobalNetworkSet, *ierror.Error)
+	List(ctx context.Context) ([]*entity.GlobalNetworkSet, *ierror.Error)
 	Get(ctx context.Context, name string) (*entity.GlobalNetworkSet, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
 }
@@ -43,6 +44,15 @@ func (h *gns) Create(c *gin.Context) {
 		return
 	}
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToGlobalNetworkSetDTO(gnsEntity))
+}
+
+func (h *gns) List(c *gin.Context) {
+	gnpsEntity, ierr := h.service.List(c.Request.Context())
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToListGlobalNetworkSetDTOs(gnpsEntity))
 }
 
 func (h *gns) Get(c *gin.Context) {

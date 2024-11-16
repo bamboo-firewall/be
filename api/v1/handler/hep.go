@@ -16,9 +16,10 @@ import (
 
 type hepService interface {
 	Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
-	Get(ctx context.Context, name string) (*entity.HostEndpoint, *ierror.Error)
-	Delete(ctx context.Context, name string) *ierror.Error
-	FetchPolicies(ctx context.Context, input *model.FetchHostEndpointPolicyInput) (*model.HostEndPointPolicy, *ierror.Error)
+	List(ctx context.Context, input *model.ListHostEndpointsInput) ([]*entity.HostEndpoint, *ierror.Error)
+	Get(ctx context.Context, input *model.GetHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
+	Delete(ctx context.Context, input *model.DeleteHostEndpointInput) *ierror.Error
+	FetchPolicies(ctx context.Context, input *model.ListHostEndpointsInput) ([]*model.HostEndpointPolicy, *ierror.Error)
 }
 
 func NewHEP(s hepService) *hep {
@@ -46,6 +47,21 @@ func (h *hep) Create(c *gin.Context) {
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToHostEndpointDTO(hepEntity))
 }
 
+func (h *hep) List(c *gin.Context) {
+	in := new(dto.ListHostEndpointsInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	gnpsEntity, ierr := h.service.List(c.Request.Context(), mapper.ToListHostEndpointsInput(in))
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToListHostEndpointDTOs(gnpsEntity))
+}
+
 func (h *hep) Get(c *gin.Context) {
 	in := new(dto.GetHostEndpointInput)
 	if ierr := httpbase.BindInput(c, in); ierr != nil {
@@ -53,7 +69,7 @@ func (h *hep) Get(c *gin.Context) {
 		return
 	}
 
-	hepEntity, ierr := h.service.Get(c.Request.Context(), in.Name)
+	hepEntity, ierr := h.service.Get(c.Request.Context(), mapper.ToGetHostEndpointInput(in))
 	if ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
@@ -68,7 +84,11 @@ func (h *hep) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(c.Request.Context(), in.Metadata.Name); err != nil {
+	if err := h.service.Delete(c.Request.Context(), &model.DeleteHostEndpointInput{
+		TenantID: in.Spec.TenantID,
+		IP:       in.Spec.IP,
+		IPs:      in.Spec.IPs,
+	}); err != nil {
 		httpbase.ReturnErrorResponse(c, err)
 		return
 	}
@@ -76,15 +96,15 @@ func (h *hep) Delete(c *gin.Context) {
 }
 
 func (h *hep) FetchPolicies(c *gin.Context) {
-	in := new(dto.FetchHostEndpointPolicyInput)
+	in := new(dto.FetchHostEndpointPoliciesInput)
 	if ierr := httpbase.BindInput(c, in); ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
 	}
-	hostEndpointPolicy, ierr := h.service.FetchPolicies(c.Request.Context(), mapper.ToFetchHostEndPointPolicyInput(in))
+	hostEndpointPolicies, ierr := h.service.FetchPolicies(c.Request.Context(), mapper.ToFetchHostEndpointPolicyInput(in))
 	if ierr != nil {
 		httpbase.ReturnErrorResponse(c, ierr)
 		return
 	}
-	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToFetchPoliciesOutput(hostEndpointPolicy))
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToFetchHEPPoliciesOutput(hostEndpointPolicies))
 }

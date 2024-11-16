@@ -31,6 +31,27 @@ func (c *apiServer) CreateGNS(ctx context.Context, input *dto.CreateGlobalNetwor
 	return nil
 }
 
+func (c *apiServer) ListGNSs(ctx context.Context) ([]*dto.GlobalNetworkSet, error) {
+	res := c.client.NewRequest().
+		SetSubURL("/api/v1/globalNetworkSets").
+		SetMethod(http.MethodGet).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to list gnss by name: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code when list gnss, status code: %d, response: %s", res.StatusCode, res.Body)
+	}
+
+	var gnss []*dto.GlobalNetworkSet
+	if err := json.Unmarshal(res.Body, &gnss); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when list gnss, response: %s, err: %w", string(res.Body), err)
+	}
+	return gnss, nil
+}
+
 func (c *apiServer) GetGNS(ctx context.Context, input *dto.GetGNSInput) (*dto.GlobalNetworkSet, error) {
 	res := c.client.NewRequest().
 		SetSubURL(fmt.Sprintf("/api/v1/globalNetworkSets/byName/%s", input.Name)).

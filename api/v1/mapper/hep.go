@@ -3,8 +3,17 @@ package mapper
 import (
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
 	"github.com/bamboo-firewall/be/domain/model"
 )
+
+func ToListHostEndpointDTOs(heps []*entity.HostEndpoint) []*dto.HostEndpoint {
+	hepDTOs := make([]*dto.HostEndpoint, 0, len(heps))
+	for _, hep := range heps {
+		hepDTOs = append(hepDTOs, ToHostEndpointDTO(hep))
+	}
+	return hepDTOs
+}
 
 func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 	if hep == nil {
@@ -20,6 +29,8 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 		},
 		Spec: dto.HostEndpointSpec{
 			InterfaceName: hep.Spec.InterfaceName,
+			TenantID:      hep.Spec.TenantID,
+			IP:            net.IntToIP(hep.Spec.IP).String(),
 			IPs:           hep.Spec.IPs,
 		},
 		Description: hep.Description,
@@ -36,19 +47,65 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 		},
 		Spec: model.HostEndpointSpecInput{
 			InterfaceName: in.Spec.InterfaceName,
+			IP:            in.Spec.IP,
+			TenantID:      in.Spec.TenantID,
 			IPs:           in.Spec.IPs,
 		},
 		Description: in.Description,
 	}
 }
 
-func ToFetchHostEndPointPolicyInput(in *dto.FetchHostEndpointPolicyInput) *model.FetchHostEndpointPolicyInput {
-	return &model.FetchHostEndpointPolicyInput{
-		Name: in.Name,
+func ToGetHostEndpointInput(in *dto.GetHostEndpointInput) *model.GetHostEndpointInput {
+	var ipInt uint32
+	netIP := net.ParseIP(in.IP)
+	if netIP != nil {
+		ipInt = net.IPToInt(*netIP)
+	}
+	return &model.GetHostEndpointInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
 	}
 }
 
-func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.HostEndpointPolicy {
+func ToListHostEndpointsInput(in *dto.ListHostEndpointsInput) *model.ListHostEndpointsInput {
+	var ipInt *uint32
+	if in.IP != nil {
+		netIP := net.ParseIP(*in.IP)
+		if netIP != nil {
+			ip := net.IPToInt(*netIP)
+			ipInt = &ip
+		}
+	}
+	return &model.ListHostEndpointsInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
+	}
+}
+
+func ToFetchHostEndpointPolicyInput(in *dto.FetchHostEndpointPoliciesInput) *model.ListHostEndpointsInput {
+	var ipInt *uint32
+	if in.IP != nil {
+		netIP := net.ParseIP(*in.IP)
+		if netIP != nil {
+			ip := net.IPToInt(*netIP)
+			ipInt = &ip
+		}
+	}
+	return &model.ListHostEndpointsInput{
+		TenantID: in.TenantID,
+		IP:       ipInt,
+	}
+}
+
+func ToFetchHEPPoliciesOutput(hepPolicies []*model.HostEndpointPolicy) []*dto.HostEndpointPolicy {
+	result := make([]*dto.HostEndpointPolicy, 0, len(hepPolicies))
+	for _, hepPolicy := range hepPolicies {
+		result = append(result, ToFetchHEPPolicyOutput(hepPolicy))
+	}
+	return result
+}
+
+func ToFetchHEPPolicyOutput(hostEndpointPolicy *model.HostEndpointPolicy) *dto.HostEndpointPolicy {
 	parsedGNPDTOs := make([]*dto.ParsedGNP, len(hostEndpointPolicy.ParsedGNPs))
 	for i, policy := range hostEndpointPolicy.ParsedGNPs {
 		parsedGNPDTOs[i] = toParsedGNPDTO(policy)
@@ -62,7 +119,7 @@ func ToFetchPoliciesOutput(hostEndpointPolicy *model.HostEndPointPolicy) *dto.Ho
 		parsedGNSDTOs[i] = toParsedGNSDTO(set)
 	}
 	return &dto.HostEndpointPolicy{
-		MetaData: dto.HostEndPointPolicyMetadata{
+		MetaData: dto.HostEndpointPolicyMetadata{
 			HEPVersions: hostEndpointPolicy.MetaData.HEPVersions,
 			GNPVersions: hostEndpointPolicy.MetaData.GNPVersions,
 			GNSVersions: hostEndpointPolicy.MetaData.GNSVersions,

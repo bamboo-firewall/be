@@ -2,12 +2,16 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
+
+	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 )
 
 type PolicyDB struct {
@@ -28,7 +32,59 @@ func NewPolicyDB(uri string) (*PolicyDB, error) {
 	if err = client.Ping(context.Background(), readpref.Primary()); err != nil {
 		return nil, err
 	}
-	return &PolicyDB{Database: client.Database(cs.Database)}, nil
+	pm := &PolicyDB{
+		Database: client.Database(cs.Database),
+	}
+	if err = pm.createIndexes(); err != nil {
+		return nil, err
+	}
+	return pm, nil
+}
+
+func (pm *PolicyDB) createIndexes() error {
+	indexMap := map[string][]mongo.IndexModel{
+		entity.HostEndpoint{}.CollectionName(): {
+			{
+				Keys:    bson.D{{Key: "spec.tenant_id", Value: 1}, {Key: "spec.ip", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys:    bson.D{{Key: "uuid", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+		},
+		entity.GlobalNetworkSet{}.CollectionName(): {
+			{
+				Keys:    bson.D{{Key: "metadata.name", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys:    bson.D{{Key: "uuid", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+		},
+		entity.GlobalNetworkPolicy{}.CollectionName(): {
+			{
+				Keys:    bson.D{{Key: "metadata.name", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			{
+				Keys: bson.D{{Key: "spec.order", Value: 1}},
+			},
+			{
+				Keys:    bson.D{{Key: "uuid", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+		},
+	}
+	for collectName, indexes := range indexMap {
+		_, err := pm.Database.Collection(collectName).Indexes().CreateMany(context.TODO(), indexes)
+		if err != nil {
+			return fmt.Errorf("create index: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (pm *PolicyDB) Stop(ctx context.Context) error {
