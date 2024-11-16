@@ -91,7 +91,7 @@ func list(cmd *cobra.Command, args []string) error {
 
 	resources, err := resourceMgr.List(context.Background(), apiServer, input)
 	if err != nil {
-		return fmt.Errorf("list resources failed: %v", err)
+		return fmt.Errorf("list resources failed: %w", err)
 	}
 
 	if err = printResources(resourceMgr, resources); err != nil {
