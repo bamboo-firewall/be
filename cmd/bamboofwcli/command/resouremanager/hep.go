@@ -18,6 +18,11 @@ func (h *hep) Create(ctx context.Context, apiServer APIServer, resource interfac
 	return apiServer.CreateHEP(ctx, r)
 }
 
+func (h *hep) List(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
+	r := resource.(*dto.ListHostEndpointsInput)
+	return apiServer.ListHEPs(ctx, r)
+}
+
 func (h *hep) Get(ctx context.Context, apiServer APIServer, resource interface{}) (interface{}, error) {
 	r := resource.(*dto.GetHostEndpointInput)
 	return apiServer.GetHEP(ctx, r)
@@ -30,4 +35,19 @@ func (h *hep) Delete(ctx context.Context, apiServer APIServer, resource interfac
 
 func (h *hep) GetResourceType() ResourceType {
 	return ResourceTypeHEP
+}
+
+func (h *hep) GetHeader() []string {
+	return []string{"UUID", "NAME", "TENANT_ID", "IP", "IPS", "VERSION"}
+}
+
+func (h *hep) GetHeaderMap() map[string]string {
+	return map[string]string{
+		"UUID":      "{{.UUID}}",
+		"NAME":      "{{.Metadata.Name}}",
+		"TENANT_ID": "{{.Spec.TenantID}}",
+		"IP":        "{{.Spec.IP}}",
+		"IPS":       "{{.Spec.IPs}}",
+		"VERSION":   "{{.Version}}",
+	}
 }

@@ -31,23 +31,54 @@ func (c *apiServer) CreateHEP(ctx context.Context, input *dto.CreateHostEndpoint
 	return nil
 }
 
-func (c *apiServer) GetHEP(ctx context.Context, input *dto.GetHostEndpointInput) (*dto.HostEndpoint, error) {
+func (c *apiServer) ListHEPs(ctx context.Context, input *dto.ListHostEndpointsInput) ([]*dto.HostEndpoint, error) {
+	params := make(map[string]string)
+	if input != nil {
+		if input.TenantID != nil {
+			params["tenantID"] = fmt.Sprint(*input.TenantID)
+		}
+		if input.IP != nil {
+			params["ip"] = *input.IP
+		}
+	}
 	res := c.client.NewRequest().
-		SetSubURL(fmt.Sprintf("/api/v1/hostEndpoints/byName/%s", input.Name)).
+		SetSubURL("/api/v1/hostEndpoints").
+		SetParams(params).
 		SetMethod(http.MethodGet).
 		DoRequest(ctx)
 
 	if res.Err != nil {
-		return nil, fmt.Errorf("failed to get hostendpoint by name: %w", res.Err)
+		return nil, fmt.Errorf("failed to list hostendpoint: %w", res.Err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when get hostendpoint by name, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, fmt.Errorf("unexpected status code when list hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
+	}
+
+	var heps []*dto.HostEndpoint
+	if err := json.Unmarshal(res.Body, &heps); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when list hostendpoint, response: %s, err: %w", string(res.Body), err)
+	}
+	return heps, nil
+}
+
+func (c *apiServer) GetHEP(ctx context.Context, input *dto.GetHostEndpointInput) (*dto.HostEndpoint, error) {
+	res := c.client.NewRequest().
+		SetSubURL(fmt.Sprintf("/api/v1/hostEndpoints/byTenantID/%d/byIP/%s", input.TenantID, input.IP)).
+		SetMethod(http.MethodGet).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to get hostendpoint: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code when get hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
 	}
 
 	var hep *dto.HostEndpoint
 	if err := json.Unmarshal(res.Body, &hep); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal when get hostendpoint by name, response: %s, err: %w", string(res.Body), err)
+		return nil, fmt.Errorf("failed to unmarshal when get hostendpoint, response: %s, err: %w", string(res.Body), err)
 	}
 	return hep, nil
 }

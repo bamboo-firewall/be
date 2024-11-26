@@ -6,6 +6,14 @@ import (
 	"github.com/bamboo-firewall/be/domain/model"
 )
 
+func ToListGlobalNetworkPolicyDTOs(gnps []*entity.GlobalNetworkPolicy) []*dto.GlobalNetworkPolicy {
+	gnpDTOs := make([]*dto.GlobalNetworkPolicy, 0, len(gnps))
+	for _, gnp := range gnps {
+		gnpDTOs = append(gnpDTOs, ToGlobalNetworkPolicyDTO(gnp))
+	}
+	return gnpDTOs
+}
+
 func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetworkPolicy {
 	if gnp == nil {
 		return nil
@@ -29,6 +37,7 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 			Labels: gnp.Metadata.Labels,
 		},
 		Spec: dto.GNPSpec{
+			Order:    gnp.Spec.Order,
 			Selector: gnp.Spec.Selector,
 			Ingress:  specIngress,
 			Egress:   specEgress,
@@ -45,7 +54,7 @@ func toRuleDTO(rule entity.GNPSpecRule) dto.GNPSpecRule {
 		Action:      rule.Action,
 		Protocol:    rule.Protocol,
 		NotProtocol: rule.NotProtocol,
-		IPVersion:   int(rule.IPVersion),
+		IPVersion:   rule.IPVersion,
 		Source:      toRuleEntityDTO(rule.Source),
 		Destination: toRuleEntityDTO(rule.Destination),
 	}
@@ -65,12 +74,12 @@ func toRuleEntityDTO(ruleEntity *entity.GNPSpecRuleEntity) *dto.GNPSpecRuleEntit
 }
 
 func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *model.CreateGlobalNetworkPolicyInput {
-	var specIngress []model.GNPSpecRuleInput
+	specIngress := make([]model.GNPSpecRuleInput, 0, len(in.Spec.Ingress))
 	for _, rule := range in.Spec.Ingress {
 		specIngress = append(specIngress, toRuleInput(rule))
 	}
 
-	var specEgress []model.GNPSpecRuleInput
+	specEgress := make([]model.GNPSpecRuleInput, 0, len(in.Spec.Egress))
 	for _, rule := range in.Spec.Egress {
 		specEgress = append(specEgress, toRuleInput(rule))
 	}
@@ -81,6 +90,7 @@ func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *m
 			Labels: in.Metadata.Labels,
 		},
 		Spec: model.GNPSpecInput{
+			Order:    in.Spec.Order,
 			Selector: in.Spec.Selector,
 			Ingress:  specIngress,
 			Egress:   specEgress,

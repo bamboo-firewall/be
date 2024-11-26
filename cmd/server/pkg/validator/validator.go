@@ -47,7 +47,7 @@ func Init() {
 	registerStructValidation(validateGNSSpecInput, dto.GNSSpecInput{})
 }
 
-var nameRegex = regexp.MustCompile(`^[a-z_-]+$`)
+var nameRegex = regexp.MustCompile(`^[-a-zA-Z0-9_\\.]+$`)
 
 func validateName(fl validator.FieldLevel) bool {
 	return nameRegex.MatchString(fl.Field().String())
@@ -72,12 +72,20 @@ func validateAction(fl validator.FieldLevel) bool {
 
 func validateIPVersion(fl validator.FieldLevel) bool {
 	ipVersion := fl.Field().Interface().(int)
-	return slices.Contains([]entity.IPVersion{entity.IPVersion4, entity.IPVersion6}, entity.IPVersion(ipVersion))
+	return slices.Contains([]int{entity.IPVersion4, entity.IPVersion6}, ipVersion)
 }
 
 func validateProtocol(fl validator.FieldLevel) bool {
-	protocol := fl.Field().Interface().(string)
-	return slices.Contains([]entity.Protocol{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolICMP, entity.ProtocolSCTP}, entity.Protocol(strings.ToLower(protocol)))
+	protocol := fl.Field().Interface()
+	switch protocol.(type) {
+	case string:
+		return slices.Contains([]string{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolICMP, entity.ProtocolSCTP, entity.ProtocolUDPLite}, strings.ToLower(protocol.(string)))
+	case float64:
+		protocolNum := uint8(protocol.(float64))
+		return protocolNum != 0
+	default:
+		return false
+	}
 }
 
 func validateCIDR(fl validator.FieldLevel) bool {
@@ -143,11 +151,11 @@ func validateGNPSpecInput(sl validator.StructLevel) {
 
 func validateGNPSpecRuleInput(sl validator.StructLevel) {
 	input := sl.Current().Interface().(dto.GNPSpecRuleInput)
-	if input.Protocol != "" && input.NotProtocol != "" {
+	if input.Protocol != nil && input.NotProtocol != nil {
 		sl.ReportError(input.NotProtocol, "notProtocol", "NotProtocol", "cannot use notProtocol with protocol", "")
 	}
-	if input.Protocol != "" || input.NotProtocol != "" {
-		if (input.Protocol != "" && !isProtocolSupportPort(input.Protocol)) || (input.NotProtocol != "" && !isProtocolSupportPort(input.NotProtocol)) {
+	if input.Protocol != nil || input.NotProtocol != nil {
+		if (input.Protocol != nil && !isProtocolSupportPort(input.Protocol)) || (input.NotProtocol != nil && !isProtocolSupportPort(input.NotProtocol)) {
 			if input.Source != nil {
 				if len(input.Source.Ports) > 0 {
 					sl.ReportError(input.Source.Ports, "notPorts", "NotPorts", "protocol not support ports", "")
@@ -168,33 +176,55 @@ func validateGNPSpecRuleInput(sl validator.StructLevel) {
 		}
 	}
 
+	var (
+		seenV4, seenV6 bool
+	)
+	var scanNets = func(nets []string, fieldName string) {
+		var v4, v6 bool
+		for i, ipNetwork := range nets {
+			ip, ipnet, err := net.ParseCIDR(ipNetwork)
+			if err != nil {
+				sl.ReportError(ipNetwork, fmt.Sprintf("%s[%d]", fieldName, i), "", "net", "")
+				continue
+			}
+			if ip.String() != ipnet.IP.String() {
+				sl.ReportError(ipNetwork, fmt.Sprintf("%s[%d]", fieldName, i), "", "ip network is invalid", "")
+			}
+			if input.IPVersion != nil && ip.Version() != *input.IPVersion {
+				sl.ReportError(ipNetwork, fmt.Sprintf("%s[%d]", fieldName, i), "", "not match with ipVersion", "")
+			}
+
+			v4 = v4 || ip.Version() == entity.IPVersion4
+			v6 = v6 || ip.Version() == entity.IPVersion6
+		}
+
+		if v4 && seenV6 || v6 && seenV4 || v4 && v6 {
+			sl.ReportError(nets, fieldName, "", "cannot use ipV4 and ipV6 together", "")
+		}
+
+		seenV4 = seenV4 || v4
+		seenV6 = seenV6 || v6
+	}
+
 	if input.Source != nil {
-		isNetSameIPVersion(sl, input.IPVersion, input.Source.Nets)
-		isNetSameIPVersion(sl, input.IPVersion, input.Source.NotNets)
+		scanNets(input.Source.Nets, "Source.Nets")
+		scanNets(input.Source.NotNets, "Source.NotNets")
 	}
 	if input.Destination != nil {
-		isNetSameIPVersion(sl, input.IPVersion, input.Destination.Nets)
-		isNetSameIPVersion(sl, input.IPVersion, input.Destination.NotNets)
+		scanNets(input.Destination.Nets, "Destination.Nets")
+		scanNets(input.Destination.NotNets, "Destination.NotNets")
 	}
 }
 
-func isProtocolSupportPort(protocol string) bool {
-	return slices.Contains([]entity.Protocol{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolSCTP}, entity.Protocol(strings.ToLower(protocol)))
-}
-
-func isNetSameIPVersion(sl validator.StructLevel, ipVersion int, nets []string) {
-	for i, ipNetwork := range nets {
-		ip, ipnet, err := net.ParseCIDROrIP(ipNetwork)
-		if err != nil {
-			sl.ReportError(ipNetwork, fmt.Sprintf("nets[%d]", i), "", "net", "")
-			continue
-		}
-		if ip.String() != ipnet.IP.String() {
-			sl.ReportError(ipNetwork, fmt.Sprintf("nets[%d]", i), "", "ip network is invalid", "")
-		}
-		if ip.Version() != ipVersion {
-			sl.ReportError(ipNetwork, fmt.Sprintf("nets[%d]", i), "", "not match with ipVersion", "")
-		}
+func isProtocolSupportPort(protocol interface{}) bool {
+	switch protocol.(type) {
+	case string:
+		return slices.Contains([]string{entity.ProtocolTCP, entity.ProtocolUDP, entity.ProtocolSCTP}, strings.ToLower(protocol.(string)))
+	case float64:
+		protocolNum := uint8(protocol.(float64))
+		return protocolNum == entity.ProtocolNumTCP || protocolNum == entity.ProtocolNumUDP || protocolNum == entity.ProtocolNumSCTP
+	default:
+		return false
 	}
 }
 

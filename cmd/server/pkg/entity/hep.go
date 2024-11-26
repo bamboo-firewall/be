@@ -6,6 +6,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	DefaultTenantID uint64 = 1
+)
+
 type HostEndpoint struct {
 	ID          primitive.ObjectID   `bson:"_id"`
 	UUID        string               `bson:"uuid"`
@@ -24,6 +28,8 @@ type HostEndpointMetadata struct {
 
 type HostEndpointSpec struct {
 	InterfaceName string   `bson:"interface_name"`
+	IP            uint32   `json:"ip"`
+	TenantID      uint64   `bson:"tenant_id"`
 	IPs           []string `bson:"ips"`
 	IPsV4         []string `bson:"ips_v4,omitempty"`
 	IPsV6         []string `bson:"ips_v6,omitempty"`

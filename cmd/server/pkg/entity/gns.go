@@ -6,6 +6,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+var (
+	GNSEmpty = GlobalNetworkSet{
+		ID:      primitive.NewObjectID(),
+		UUID:    NewMinifyUUID(),
+		Version: 1,
+		Metadata: GNSMetadata{
+			Name: "default-empty",
+		},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+)
+
 type GlobalNetworkSet struct {
 	ID          primitive.ObjectID `bson:"_id"`
 	UUID        string             `bson:"uuid"`
