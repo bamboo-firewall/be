@@ -2,8 +2,8 @@ package mapper
 
 import (
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
 )
 
 func ToListGlobalNetworkPolicyDTOs(gnps []*entity.GlobalNetworkPolicy) []*dto.GlobalNetworkPolicy {
@@ -43,6 +43,7 @@ func ToGlobalNetworkPolicyDTO(gnp *entity.GlobalNetworkPolicy) *dto.GlobalNetwor
 			Egress:   specEgress,
 		},
 		Description: gnp.Description,
+		FilePath:    gnp.FilePath,
 		CreatedAt:   gnp.CreatedAt.Local(),
 		UpdatedAt:   gnp.UpdatedAt.Local(),
 	}
@@ -96,6 +97,7 @@ func ToCreateGlobalNetworkPolicyInput(in *dto.CreateGlobalNetworkPolicyInput) *m
 			Egress:   specEgress,
 		},
 		Description: in.Description,
+		FilePath:    in.FilePath,
 	}
 }
 
@@ -121,5 +123,21 @@ func toRuleEntityInput(ruleEntity *dto.GNPSpecRuleEntityInput) *model.GNPSpecRul
 		NotNets:  ruleEntity.NotNets,
 		Ports:    ruleEntity.Ports,
 		NotPorts: ruleEntity.NotPorts,
+	}
+}
+func ToValidateGlobalNetworkPolicyOutput(validateGlobalNetworkPolicyOutput *model.ValidateGlobalNetworkPolicyOutput) *dto.ValidateGlobalNetworkPolicyOutput {
+	parsedHEPDTOs := make([]*dto.ParsedHEP, len(validateGlobalNetworkPolicyOutput.ParsedHEPs))
+	for i, hep := range validateGlobalNetworkPolicyOutput.ParsedHEPs {
+		parsedHEPDTOs[i] = &dto.ParsedHEP{
+			TenantID: hep.TenantID,
+			Name:     hep.Name,
+			IP:       hep.IP,
+		}
+	}
+
+	return &dto.ValidateGlobalNetworkPolicyOutput{
+		GNP:        ToGlobalNetworkPolicyDTO(validateGlobalNetworkPolicyOutput.GNP),
+		GNPExisted: ToGlobalNetworkPolicyDTO(validateGlobalNetworkPolicyOutput.GNPExisted),
+		ParsedHEPs: parsedHEPDTOs,
 	}
 }

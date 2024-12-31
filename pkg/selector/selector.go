@@ -1,6 +1,8 @@
 package selector
 
-import "github.com/bamboo-firewall/be/cmd/server/pkg/selector/parser"
+import (
+	"github.com/bamboo-firewall/be/pkg/selector/parser"
+)
 
 type Selector interface {
 	// Evaluate evaluates the selector against the given labels expressed as a concrete map

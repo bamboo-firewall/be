@@ -1,4 +1,4 @@
-package resouremanager
+package resourcemanager
 
 import (
 	"context"
@@ -13,8 +13,9 @@ func NewGNP() Resource {
 type gnp struct {
 }
 
-func (p *gnp) Create(ctx context.Context, apiServer APIServer, resource interface{}) error {
+func (p *gnp) Create(ctx context.Context, apiServer APIServer, filePath string, resource interface{}) error {
 	r := resource.(*dto.CreateGlobalNetworkPolicyInput)
+	r.FilePath = filePath
 	return apiServer.CreateGNP(ctx, r)
 }
 
@@ -31,6 +32,12 @@ func (p *gnp) Get(ctx context.Context, apiServer APIServer, resource interface{}
 func (p *gnp) Delete(ctx context.Context, apiServer APIServer, resource interface{}) error {
 	r := resource.(*dto.DeleteGlobalNetworkPolicyInput)
 	return apiServer.DeleteGNP(ctx, r)
+}
+
+func (p *gnp) Validate(ctx context.Context, apiServer APIServer, filePath string, resource interface{}) (interface{}, error) {
+	r := resource.(*dto.CreateGlobalNetworkPolicyInput)
+	r.FilePath = filePath
+	return apiServer.ValidateGlobalNetworkPolicy(ctx, r)
 }
 
 func (p *gnp) GetResourceType() ResourceType {

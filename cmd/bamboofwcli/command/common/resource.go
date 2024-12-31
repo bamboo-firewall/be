@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resouremanager"
+	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resourcemanager"
 )
 
 type FileExtension string
@@ -21,22 +21,23 @@ const (
 	FileExtensionJSON FileExtension = "json"
 )
 
-func GetResourceMgrByType(resourceType string) (resouremanager.Resource, error) {
+func GetResourceMgrByType(resourceType string) (resourcemanager.Resource, error) {
 	switch strings.ToLower(resourceType) {
 	case "hostendpoint", "hep":
-		return resouremanager.NewHEP(), nil
+		return resourcemanager.NewHEP(), nil
 	case "globalnetworkset", "gns":
-		return resouremanager.NewGNS(), nil
+		return resourcemanager.NewGNS(), nil
 	case "globalnetworkpolicy", "gnp":
-		return resouremanager.NewGNP(), nil
+		return resourcemanager.NewGNP(), nil
 	default:
 		return nil, fmt.Errorf("unknown resource type: %s", resourceType)
 	}
 }
 
 type ResourceFile struct {
-	Name    string
-	Content interface{}
+	Name     string
+	FilePath string
+	Content  interface{}
 }
 
 func GetResourceFilesByFileNames[T any](fileNames []string) ([]*ResourceFile, error) {
@@ -78,8 +79,14 @@ func GetResourceFileByFileName[T any](fileName string) (*ResourceFile, error) {
 		return nil, fmt.Errorf("unsupported file extension: %q", fileExtension)
 	}
 
+	absPath, err := filepath.Abs(f.Name())
+	if err != nil {
+		return nil, fmt.Errorf("could not find absolute path of file %q: %w", fileName, err)
+	}
+
 	return &ResourceFile{
-		Name:    fileName,
-		Content: &input,
+		Name:     fileName,
+		FilePath: absPath,
+		Content:  &input,
 	}, nil
 }

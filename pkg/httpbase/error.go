@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
 const (
@@ -66,6 +66,10 @@ var (
 
 	ErrDatabase = func(ctx context.Context, msgID string) *ierror.Error {
 		return newClientIError(ctx, ErrorCodeDatabase, msgID).SetHTTPStatus(http.StatusInternalServerError)
+	}
+
+	ErrInternal = func(ctx context.Context, msgID string) *ierror.Error {
+		return newClientIError(ctx, ErrorCodeInternalServer, msgID).SetHTTPStatus(http.StatusInternalServerError)
 	}
 )
 

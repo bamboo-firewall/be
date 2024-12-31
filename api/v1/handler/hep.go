@@ -8,10 +8,10 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/api/v1/mapper"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
 type hepService interface {
@@ -20,6 +20,7 @@ type hepService interface {
 	Get(ctx context.Context, input *model.GetHostEndpointInput) (*entity.HostEndpoint, *ierror.Error)
 	Delete(ctx context.Context, input *model.DeleteHostEndpointInput) *ierror.Error
 	FetchPolicies(ctx context.Context, input *model.ListHostEndpointsInput) ([]*model.HostEndpointPolicy, *ierror.Error)
+	Validate(ctx context.Context, in *model.CreateHostEndpointInput) (*model.ValidateHostEndpointOutput, *ierror.Error)
 }
 
 func NewHEP(s hepService) *hep {
@@ -107,4 +108,20 @@ func (h *hep) FetchPolicies(c *gin.Context) {
 		return
 	}
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToFetchHEPPoliciesOutput(hostEndpointPolicies))
+}
+
+func (h *hep) Validate(c *gin.Context) {
+	in := new(dto.CreateHostEndpointInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	validateHEPOutput, ierr := h.service.Validate(c.Request.Context(), mapper.ToCreateHostEndpointInput(in))
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToValidateHEPOutput(validateHEPOutput))
 }

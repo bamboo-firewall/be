@@ -8,45 +8,47 @@ type GlobalNetworkPolicy struct {
 	Version     uint        `json:"version" yaml:"version"`
 	Metadata    GNPMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Spec        GNPSpec     `json:"spec" yaml:"spec"`
-	Description string      `json:"description,omitempty" yaml:"description"`
+	Description string      `json:"description,omitempty" yaml:"description,omitempty"`
+	FilePath    string      `json:"filePath,omitempty" yaml:"filePath,omitempty"`
 	CreatedAt   time.Time   `json:"createdAt" yaml:"createdAt"`
 	UpdatedAt   time.Time   `json:"updatedAt" yaml:"updatedAt"`
 }
 
 type GNPMetadata struct {
 	Name   string            `json:"name" yaml:"name"`
-	Labels map[string]string `json:"labels,omitempty" yaml:"labels"`
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 }
 
 type GNPSpec struct {
 	Order    uint32        `json:"order" yaml:"order"`
-	Selector string        `json:"selector,omitempty" yaml:"selector"`
-	Ingress  []GNPSpecRule `json:"ingress,omitempty" yaml:"ingress"`
-	Egress   []GNPSpecRule `json:"egress,omitempty" yaml:"egress"`
+	Selector string        `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Ingress  []GNPSpecRule `json:"ingress,omitempty" yaml:"ingress,omitempty"`
+	Egress   []GNPSpecRule `json:"egress,omitempty" yaml:"egress,omitempty"`
 }
 
 type GNPSpecRule struct {
-	Metadata    map[string]string  `json:"metadata,omitempty" yaml:"metadata"`
+	Metadata    map[string]string  `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Action      string             `json:"action" yaml:"action"`
-	Protocol    interface{}        `json:"protocol,omitempty" yaml:"protocol"`
-	NotProtocol interface{}        `json:"notProtocol,omitempty" yaml:"notProtocol"`
-	IPVersion   *int               `json:"ipVersion,omitempty" yaml:"ipVersion"`
-	Source      *GNPSpecRuleEntity `json:"source,omitempty" yaml:"source"`
-	Destination *GNPSpecRuleEntity `json:"destination,omitempty" yaml:"destination"`
+	Protocol    interface{}        `json:"protocol,omitempty" yaml:"protocol,omitempty"`
+	NotProtocol interface{}        `json:"notProtocol,omitempty" yaml:"notProtocol,omitempty"`
+	IPVersion   *int               `json:"ipVersion,omitempty" yaml:"ipVersion,omitempty"`
+	Source      *GNPSpecRuleEntity `json:"source,omitempty" yaml:"source,omitempty"`
+	Destination *GNPSpecRuleEntity `json:"destination,omitempty" yaml:"destination,omitempty"`
 }
 
 type GNPSpecRuleEntity struct {
-	Selector string        `json:"selector,omitempty" yaml:"selector"`
-	Nets     []string      `json:"nets,omitempty" yaml:"nets"`
-	NotNets  []string      `json:"notNets,omitempty" yaml:"notNets"`
-	Ports    []interface{} `json:"ports,omitempty" yaml:"ports"`
-	NotPorts []interface{} `json:"notPorts,omitempty" yaml:"notPorts"`
+	Selector string        `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Nets     []string      `json:"nets,omitempty" yaml:"nets,omitempty"`
+	NotNets  []string      `json:"notNets,omitempty" yaml:"notNets,omitempty"`
+	Ports    []interface{} `json:"ports,omitempty" yaml:"ports,omitempty"`
+	NotPorts []interface{} `json:"notPorts,omitempty" yaml:"notPorts,omitempty"`
 }
 
 type CreateGlobalNetworkPolicyInput struct {
 	Metadata    GNPMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
 	Spec        GNPSpecInput     `json:"spec" yaml:"spec" validate:"required"`
 	Description string           `json:"description" yaml:"description"`
+	FilePath    string           `json:"filePath" yaml:"filePath"`
 }
 
 type GNPMetadataInput struct {
@@ -89,4 +91,10 @@ type DeleteGlobalNetworkPolicyInput struct {
 
 type ListGNPsInput struct {
 	IsOrder bool `form:"isOrder"`
+}
+
+type ValidateGlobalNetworkPolicyOutput struct {
+	GNP        *GlobalNetworkPolicy `json:"gnp"`
+	GNPExisted *GlobalNetworkPolicy `json:"gnpExisted"`
+	ParsedHEPs []*ParsedHEP         `json:"parsedHEPs"`
 }

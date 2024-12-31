@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -12,8 +13,10 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/common"
-	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resouremanager"
+	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resourcemanager"
 	"github.com/bamboo-firewall/be/pkg/client"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
 var (
@@ -69,7 +72,7 @@ func get(cmd *cobra.Command, args []string) error {
 
 	var input interface{}
 	switch resourceMgr.GetResourceType() {
-	case resouremanager.ResourceTypeHEP:
+	case resourcemanager.ResourceTypeHEP:
 		if getHEPByTenantID == 0 || getHEPByIP == "" {
 			return fmt.Errorf("get HEP by tenantID or ip is required")
 		}
@@ -77,12 +80,12 @@ func get(cmd *cobra.Command, args []string) error {
 			TenantID: getHEPByTenantID,
 			IP:       getHEPByIP,
 		}
-	case resouremanager.ResourceTypeGNS:
+	case resourcemanager.ResourceTypeGNS:
 		if resourceName == "" {
 			return fmt.Errorf("no resource name provided")
 		}
 		input = &dto.GetGNSInput{Name: resourceName}
-	case resouremanager.ResourceTypeGNP:
+	case resourcemanager.ResourceTypeGNP:
 		if resourceName == "" {
 			return fmt.Errorf("no resource name provided")
 		}
@@ -95,6 +98,13 @@ func get(cmd *cobra.Command, args []string) error {
 
 	resource, err := resourceMgr.Get(context.Background(), apiServer, input)
 	if err != nil {
+		var ierr *ierror.Error
+		if errors.As(err, &ierr) {
+			if ierr.Code == httpbase.ErrorCodeNotFound {
+				fmt.Printf("resource %s not found.\n", resourceName)
+				return nil
+			}
+		}
 		return fmt.Errorf("get resource by name %s failed: %v", resourceName, err)
 	}
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/selector/tokenizer"
+	"github.com/bamboo-firewall/be/pkg/selector/tokenizer"
 )
 
 func Parse(selector string) (*selectorRoot, error) {

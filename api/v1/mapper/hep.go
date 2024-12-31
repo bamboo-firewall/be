@@ -2,9 +2,9 @@ package mapper
 
 import (
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/net"
 )
 
 func ToListHostEndpointDTOs(heps []*entity.HostEndpoint) []*dto.HostEndpoint {
@@ -34,6 +34,7 @@ func ToHostEndpointDTO(hep *entity.HostEndpoint) *dto.HostEndpoint {
 			IPs:           hep.Spec.IPs,
 		},
 		Description: hep.Description,
+		FilePath:    hep.FilePath,
 		CreatedAt:   hep.CreatedAt.Local(),
 		UpdatedAt:   hep.UpdatedAt.Local(),
 	}
@@ -52,6 +53,7 @@ func ToCreateHostEndpointInput(in *dto.CreateHostEndpointInput) *model.CreateHos
 			IPs:           in.Spec.IPs,
 		},
 		Description: in.Description,
+		FilePath:    in.FilePath,
 	}
 }
 
@@ -185,5 +187,17 @@ func toParsedGNSDTO(parsedGNS *model.ParsedGNS) *dto.ParsedGNS {
 		Name:   parsedGNS.Name,
 		NetsV4: parsedGNS.NetsV4,
 		NetsV6: parsedGNS.NetsV6,
+	}
+}
+
+func ToValidateHEPOutput(validateHEPOutput *model.ValidateHostEndpointOutput) *dto.ValidateHostEndpointOutput {
+	parsedGNPDTOs := make([]*dto.ParsedGNP, len(validateHEPOutput.ParsedGNPs))
+	for i, policy := range validateHEPOutput.ParsedGNPs {
+		parsedGNPDTOs[i] = toParsedGNPDTO(policy)
+	}
+	return &dto.ValidateHostEndpointOutput{
+		HEP:        ToHostEndpointDTO(validateHEPOutput.HEP),
+		HEPExisted: ToHostEndpointDTO(validateHEPOutput.HEPExisted),
+		ParsedGNPs: parsedGNPDTOs,
 	}
 }

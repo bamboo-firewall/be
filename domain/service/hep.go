@@ -10,14 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/bamboo-firewall/be"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/common/errlist"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/selector"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/common/errlist"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
+	"github.com/bamboo-firewall/be/pkg/net"
+	"github.com/bamboo-firewall/be/pkg/repository"
+	"github.com/bamboo-firewall/be/pkg/selector"
 )
 
 func NewHEP(policyMongo *repository.PolicyDB) *hep {
@@ -31,65 +31,18 @@ type hep struct {
 }
 
 func (ds *hep) Create(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error) {
-	ipsV4, ipsV6 := exactIPs(input.Spec.IPs)
-	if len(ipsV4) == 0 {
-		return nil, httpbase.ErrBadRequest(ctx, "required at least one ip version 4")
-	}
-	if input.Spec.TenantID == 0 {
-		input.Spec.TenantID = entity.DefaultTenantID
-	}
-	var ipString string
-	if input.Spec.IP == "" {
-		ipString = ipsV4[0]
-	} else {
-		ipString = input.Spec.IP
+	hepEntity, ierr := createModelToHEPEntity(ctx, input)
+	if ierr != nil {
+		return nil, ierr
 	}
 
-	ip := net.ParseIP(ipString)
-
-	hepEntity := &entity.HostEndpoint{
-		ID:   primitive.NewObjectID(),
-		UUID: entity.NewMinifyUUID(),
-		Metadata: entity.HostEndpointMetadata{
-			Name:   input.Metadata.Name,
-			Labels: input.Metadata.Labels,
-		},
-		Spec: entity.HostEndpointSpec{
-			InterfaceName: input.Spec.InterfaceName,
-			IP:            net.IPToInt(*ip),
-			TenantID:      input.Spec.TenantID,
-			IPs:           input.Spec.IPs,
-			IPsV4:         ipsV4,
-			IPsV6:         ipsV6,
-		},
-		Description: input.Description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	hepEntity, coreErr := ds.storage.UpsertHostEndpoint(ctx, hepEntity)
-	if coreErr != nil {
+	if coreErr := ds.storage.UpsertHostEndpoint(ctx, hepEntity); coreErr != nil {
 		if errors.Is(coreErr, errlist.ErrDuplicateHostEndpoint) {
 			return nil, httpbase.ErrBadRequest(ctx, "duplicate host endpoint").SetSubError(coreErr)
 		}
 		return nil, httpbase.ErrDatabase(ctx, "create host endpoint failed").SetSubError(coreErr)
 	}
 	return hepEntity, nil
-}
-
-func exactIPs(ips []string) (ipsV4, ipsV6 []string) {
-	for _, ipString := range ips {
-		ip := net.ParseIP(ipString)
-		if ip == nil {
-			slog.Warn("malformed ip", "ip", ipString)
-			continue
-		}
-		if ip.Version() == int(entity.IPVersion4) {
-			ipsV4 = append(ipsV4, ip.String())
-		} else if ip.Version() == int(entity.IPVersion6) {
-			ipsV6 = append(ipsV6, ip.String())
-		}
-	}
-	return
 }
 
 func (ds *hep) Get(ctx context.Context, input *model.GetHostEndpointInput) (*entity.HostEndpoint, *ierror.Error) {
@@ -131,6 +84,129 @@ func (ds *hep) Delete(ctx context.Context, input *model.DeleteHostEndpointInput)
 		return httpbase.ErrDatabase(ctx, "delete host endpoint failed").SetSubError(coreErr)
 	}
 	return nil
+}
+
+func (ds *hep) Validate(ctx context.Context, input *model.CreateHostEndpointInput) (*model.ValidateHostEndpointOutput, *ierror.Error) {
+	hepEntity, ierr := createModelToHEPEntity(ctx, input)
+	if ierr != nil {
+		return nil, ierr
+	}
+
+	hepPolicy, ierr := ds.ListRelatedPolicies(ctx, hepEntity, nil)
+	if ierr != nil {
+		return nil, ierr
+	}
+
+	hepExistedEntity, coreErr := ds.storage.GetHostEndpoint(ctx, &model.GetHostEndpointInput{
+		TenantID: input.Spec.TenantID,
+		IP:       hepEntity.Spec.IP,
+	})
+	if coreErr != nil {
+		if !errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
+			return nil, httpbase.ErrDatabase(ctx, "get host endpoint failed").SetSubError(coreErr)
+		}
+	}
+
+	return &model.ValidateHostEndpointOutput{
+		HEP:        hepEntity,
+		HEPExisted: hepExistedEntity,
+		ParsedGNPs: hepPolicy.ParsedGNPs,
+	}, nil
+}
+
+func (ds *hep) ListRelatedPolicies(ctx context.Context, targetHEPEntity *entity.HostEndpoint, input *model.GetHostEndpointInput) (*model.HostEndpointPolicy, *ierror.Error) {
+	if targetHEPEntity == nil {
+		hepEntity, coreErr := ds.storage.GetHostEndpoint(ctx, input)
+		if coreErr != nil {
+			if errors.Is(coreErr, errlist.ErrNotFoundHostEndpoint) {
+				return nil, httpbase.ErrNotFound(ctx, "not found").SetSubError(coreErr)
+			}
+			return nil, httpbase.ErrDatabase(ctx, "Get host endpoints failed").SetSubError(coreErr)
+		}
+		targetHEPEntity = hepEntity
+	}
+
+	gnps, coreErr := ds.storage.ListGNPs(ctx, &model.ListGNPsInput{IsOrder: true})
+	if coreErr != nil {
+		return nil, httpbase.ErrDatabase(ctx, "list global network policy failed").SetSubError(coreErr)
+	}
+
+	var (
+		parsedGNPs []*model.ParsedGNP
+	)
+
+	for _, policy := range gnps {
+		sel, errParse := selector.Parse(policy.Spec.Selector)
+		if errParse != nil {
+			slog.Warn("malformed selector", "policy_uuid", policy.UUID, "selector", policy.Spec.Selector, "err", errParse)
+			continue
+		}
+		if !sel.Evaluate(targetHEPEntity.Metadata.Labels) {
+			continue
+		}
+		parsedGNPs = append(parsedGNPs, &model.ParsedGNP{
+			Name: policy.Metadata.Name,
+		})
+	}
+	return &model.HostEndpointPolicy{
+		HEP:        targetHEPEntity,
+		ParsedGNPs: parsedGNPs,
+	}, nil
+}
+
+func createModelToHEPEntity(ctx context.Context, input *model.CreateHostEndpointInput) (*entity.HostEndpoint, *ierror.Error) {
+	ipsV4, ipsV6 := exactIPs(input.Spec.IPs)
+	if len(ipsV4) == 0 {
+		return nil, httpbase.ErrBadRequest(ctx, "required at least one ip version 4")
+	}
+	if input.Spec.TenantID == 0 {
+		input.Spec.TenantID = entity.DefaultTenantID
+	}
+	var ipString string
+	if input.Spec.IP == "" {
+		ipString = ipsV4[0]
+	} else {
+		ipString = input.Spec.IP
+	}
+
+	ip := net.ParseIP(ipString)
+
+	return &entity.HostEndpoint{
+		ID:   primitive.NewObjectID(),
+		UUID: entity.NewMinifyUUID(),
+		Metadata: entity.HostEndpointMetadata{
+			Name:   input.Metadata.Name,
+			Labels: input.Metadata.Labels,
+		},
+		Spec: entity.HostEndpointSpec{
+			InterfaceName: input.Spec.InterfaceName,
+			IP:            net.IPToInt(*ip),
+			TenantID:      input.Spec.TenantID,
+			IPs:           input.Spec.IPs,
+			IPsV4:         ipsV4,
+			IPsV6:         ipsV6,
+		},
+		Description: input.Description,
+		FilePath:    input.FilePath,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
+}
+
+func exactIPs(ips []string) (ipsV4, ipsV6 []string) {
+	for _, ipString := range ips {
+		ip := net.ParseIP(ipString)
+		if ip == nil {
+			slog.Warn("malformed ip", "ip", ipString)
+			continue
+		}
+		if ip.Version() == entity.IPVersion4 {
+			ipsV4 = append(ipsV4, ip.String())
+		} else if ip.Version() == entity.IPVersion6 {
+			ipsV6 = append(ipsV6, ip.String())
+		}
+	}
+	return
 }
 
 func (ds *hep) FetchPolicies(ctx context.Context, input *model.ListHostEndpointsInput) ([]*model.HostEndpointPolicy, *ierror.Error) {

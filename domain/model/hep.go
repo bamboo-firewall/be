@@ -1,11 +1,14 @@
 package model
 
-import "github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+import (
+	"github.com/bamboo-firewall/be/pkg/entity"
+)
 
 type CreateHostEndpointInput struct {
 	Metadata    HostEndpointMetadataInput
 	Spec        HostEndpointSpecInput
 	Description string
+	FilePath    string
 }
 
 type HostEndpointMetadataInput struct {
@@ -98,4 +101,21 @@ type ParsedGNS struct {
 	Name   string
 	NetsV4 []string
 	NetsV6 []string
+}
+
+type ValidateHostEndpointOutput struct {
+	HEP        *entity.HostEndpoint
+	HEPExisted *entity.HostEndpoint
+	ParsedGNPs []*ParsedGNP
+}
+
+type ValidateGlobalNetworkSetOutput struct {
+	GNS        *entity.GlobalNetworkSet
+	GNSExisted *entity.GlobalNetworkSet
+}
+
+type ValidateGlobalNetworkPolicyOutput struct {
+	GNP        *entity.GlobalNetworkPolicy
+	GNPExisted *entity.GlobalNetworkPolicy
+	ParsedHEPs []*ParsedHEP
 }
