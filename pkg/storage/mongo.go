@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
+	entity2 "github.com/bamboo-firewall/be/pkg/entity"
 )
 
 type PolicyDB struct {
@@ -43,7 +43,7 @@ func NewPolicyDB(uri string) (*PolicyDB, error) {
 
 func (pm *PolicyDB) createIndexes() error {
 	indexMap := map[string][]mongo.IndexModel{
-		entity.HostEndpoint{}.CollectionName(): {
+		entity2.HostEndpoint{}.CollectionName(): {
 			{
 				Keys:    bson.D{{Key: "spec.tenant_id", Value: 1}, {Key: "spec.ip", Value: 1}},
 				Options: options.Index().SetUnique(true),
@@ -53,7 +53,7 @@ func (pm *PolicyDB) createIndexes() error {
 				Options: options.Index().SetUnique(true),
 			},
 		},
-		entity.GlobalNetworkSet{}.CollectionName(): {
+		entity2.GlobalNetworkSet{}.CollectionName(): {
 			{
 				Keys:    bson.D{{Key: "metadata.name", Value: 1}},
 				Options: options.Index().SetUnique(true),
@@ -63,7 +63,7 @@ func (pm *PolicyDB) createIndexes() error {
 				Options: options.Index().SetUnique(true),
 			},
 		},
-		entity.GlobalNetworkPolicy{}.CollectionName(): {
+		entity2.GlobalNetworkPolicy{}.CollectionName(): {
 			{
 				Keys:    bson.D{{Key: "metadata.name", Value: 1}},
 				Options: options.Index().SetUnique(true),

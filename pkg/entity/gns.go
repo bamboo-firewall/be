@@ -26,6 +26,7 @@ type GlobalNetworkSet struct {
 	Metadata    GNSMetadata        `bson:"metadata"`
 	Spec        GNSSpec            `bson:"spec"`
 	Description string             `bson:"description"`
+	FilePath    string             `bson:"file_path"`
 	CreatedAt   time.Time          `bson:"created_at"`
 	UpdatedAt   time.Time          `bson:"updated_at"`
 }

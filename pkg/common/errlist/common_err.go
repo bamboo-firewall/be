@@ -1,6 +1,8 @@
 package errlist
 
-import "github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
+import (
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
+)
 
 var (
 	ErrDatabase = ierror.NewCoreError("err_database", "")
@@ -13,4 +15,6 @@ var (
 	ErrDuplicateGlobalNetworkSet    = ierror.NewCoreError("err_duplicate_global_network_set", "")
 
 	ErrUnmarshalFailed = ierror.NewCoreError("err_unmarshal_failed", "")
+
+	ErrMalformedSelector = ierror.NewCoreError("err_malformed_selector", "")
 )

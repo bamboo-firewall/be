@@ -3,13 +3,16 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+	"text/tabwriter"
 	"time"
 
+	"github.com/bamboo-firewall/be/buildinfo"
 	"github.com/bamboo-firewall/be/config"
 )
 
@@ -18,9 +21,21 @@ const (
 )
 
 func main() {
-	var pathConfig string
+	var (
+		pathConfig  string
+		versionFlag bool
+	)
 	flag.StringVar(&pathConfig, "config-file", "", "path to env config file")
+	flag.BoolVar(&versionFlag, "version", false, "show version information")
 	flag.Parse()
+
+	if versionFlag {
+		version := fmt.Sprintf("Version: \t%s\nBranch: \t%s\nBuild: \t%s\nOrganzition: \t%s", buildinfo.Version, buildinfo.GitBranch, buildinfo.BuildDate, buildinfo.Organization)
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 0, ' ', tabwriter.TabIndent)
+		fmt.Fprintln(w, version)
+		w.Flush()
+		os.Exit(0)
+	}
 
 	cfg, err := config.New(pathConfig)
 	if err != nil {

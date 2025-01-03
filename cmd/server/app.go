@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/repository"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/storage"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/validator"
 	"github.com/bamboo-firewall/be/cmd/server/route"
 	"github.com/bamboo-firewall/be/config"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/repository"
+	"github.com/bamboo-firewall/be/pkg/storage"
+	"github.com/bamboo-firewall/be/pkg/validator"
 )
 
 type App interface {

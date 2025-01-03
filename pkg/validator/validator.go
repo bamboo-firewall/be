@@ -11,10 +11,10 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/net"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/selector"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/net"
+	"github.com/bamboo-firewall/be/pkg/selector"
 )
 
 func registerValidator(tagName string, validatorFunc validator.Func) {

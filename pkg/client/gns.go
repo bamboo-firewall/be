@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
 )
 
 func (c *apiServer) CreateGNS(ctx context.Context, input *dto.CreateGlobalNetworkSetInput) error {
@@ -25,7 +25,7 @@ func (c *apiServer) CreateGNS(ctx context.Context, input *dto.CreateGlobalNetwor
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when create globalnetworkset, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
@@ -42,7 +42,7 @@ func (c *apiServer) ListGNSs(ctx context.Context) ([]*dto.GlobalNetworkSet, erro
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when list gnss, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var gnss []*dto.GlobalNetworkSet
@@ -63,7 +63,7 @@ func (c *apiServer) GetGNS(ctx context.Context, input *dto.GetGNSInput) (*dto.Gl
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when get globalnetworkset by name, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var gns *dto.GlobalNetworkSet
@@ -87,8 +87,37 @@ func (c *apiServer) DeleteGNS(ctx context.Context, input *dto.DeleteGlobalNetwor
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when delete globalnetworkset, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
+}
+
+func (c *apiServer) ValidateGlobalNetworkSet(ctx context.Context, input *dto.CreateGlobalNetworkSetInput) (*dto.ValidateGlobalNetworkSetOutput, error) {
+	inputBytes, err := json.Marshal(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal input to validate global network set: %w", err)
+	}
+
+	res := c.client.NewRequest().
+		SetSubURL("/api/v1/globalNetworkSets/validate").
+		SetHeader(httpbase.HeaderContentType, httpbase.MIMEApplicationJSON).
+		SetBody(bytes.NewReader(inputBytes)).
+		SetMethod(http.MethodPost).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to validate global network set: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, responseBodyToIError(ctx, res)
+	}
+
+	var validateGlobalNetworkSetOutput *dto.ValidateGlobalNetworkSetOutput
+	if err = json.Unmarshal(res.Body, &validateGlobalNetworkSetOutput); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when validate global network set response: %s, err: %w", string(res.Body), err)
+	}
+
+	return validateGlobalNetworkSetOutput, nil
 }

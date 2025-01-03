@@ -11,6 +11,7 @@ type HostEndpoint struct {
 	Metadata    HostEndpointMetadata `json:"metadata" yaml:"metadata"`
 	Spec        HostEndpointSpec     `json:"spec" yaml:"spec"`
 	Description string               `json:"description" yaml:"description"`
+	FilePath    string               `json:"filePath,omitempty" yaml:"filePath,omitempty"`
 	CreatedAt   time.Time            `json:"createdAt" yaml:"createdAt"`
 	UpdatedAt   time.Time            `json:"updatedAt" yaml:"updatedAt"`
 }
@@ -31,6 +32,7 @@ type CreateHostEndpointInput struct {
 	Metadata    HostEndpointMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
 	Spec        HostEndpointSpecInput     `json:"spec" yaml:"spec" validate:"required"`
 	Description string                    `json:"description" yaml:"description"`
+	FilePath    string                    `json:"filePath" yaml:"filePath"`
 }
 
 type HostEndpointMetadataInput struct {
@@ -119,4 +121,10 @@ type ParsedGNS struct {
 	Name   string   `json:"name"`
 	NetsV4 []string `json:"netsV4"`
 	NetsV6 []string `json:"netsV6"`
+}
+
+type ValidateHostEndpointOutput struct {
+	HEP        *HostEndpoint `json:"hep"`
+	HEPExisted *HostEndpoint `json:"hepExisted"`
+	ParsedGNPs []*ParsedGNP  `json:"parsedGNPs"`
 }

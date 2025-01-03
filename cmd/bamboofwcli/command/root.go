@@ -25,6 +25,7 @@ func Execute() {
 	rootCMD.AddCommand(listCMD)
 	rootCMD.AddCommand(getCMD)
 	rootCMD.AddCommand(deleteCMD)
+	rootCMD.AddCommand(validateCommand)
 	rootCMD.AddCommand(versionCMD)
 
 	rootCMD.AddCommand(&cobra.Command{

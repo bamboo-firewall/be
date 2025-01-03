@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 type GlobalNetworkSet struct {
 	ID          string      `json:"id" yaml:"id"`
@@ -9,6 +11,7 @@ type GlobalNetworkSet struct {
 	Metadata    GNSMetadata `json:"metadata" yaml:"metadata"`
 	Spec        GNSSpec     `json:"spec" yaml:"spec"`
 	Description string      `json:"description" yaml:"description"`
+	FilePath    string      `json:"filePath,omitempty" yaml:"filePath,omitempty"`
 	CreatedAt   time.Time   `json:"createdAt" yaml:"createdAt"`
 	UpdatedAt   time.Time   `json:"updatedAt" yaml:"updatedAt"`
 }
@@ -26,6 +29,7 @@ type CreateGlobalNetworkSetInput struct {
 	Metadata    GNSMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
 	Spec        GNSSpecInput     `json:"spec" yaml:"spec"`
 	Description string           `json:"description" yaml:"description"`
+	FilePath    string           `json:"filePath" yaml:"filePath"`
 }
 
 type GNSMetadataInput struct {
@@ -45,4 +49,9 @@ type GetGNSInput struct {
 
 type DeleteGlobalNetworkSetInput struct {
 	Metadata GNSMetadataInput `json:"metadata" yaml:"metadata" validate:"required"`
+}
+
+type ValidateGlobalNetworkSetOutput struct {
+	GNS        *GlobalNetworkSet `json:"gns"`
+	GNSExisted *GlobalNetworkSet `json:"gnsExisted"`
 }

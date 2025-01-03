@@ -12,7 +12,7 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/common"
-	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resouremanager"
+	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resourcemanager"
 	"github.com/bamboo-firewall/be/pkg/client"
 )
 
@@ -71,7 +71,7 @@ func list(cmd *cobra.Command, args []string) error {
 
 	var input interface{}
 	switch resourceMgr.GetResourceType() {
-	case resouremanager.ResourceTypeHEP:
+	case resourcemanager.ResourceTypeHEP:
 		listHEPsInput := &dto.ListHostEndpointsInput{}
 		if ListHEPsByTenantID > 0 {
 			listHEPsInput.TenantID = &ListHEPsByTenantID
@@ -80,8 +80,8 @@ func list(cmd *cobra.Command, args []string) error {
 			listHEPsInput.IP = &ListHEPsByIP
 		}
 		input = listHEPsInput
-	case resouremanager.ResourceTypeGNS:
-	case resouremanager.ResourceTypeGNP:
+	case resourcemanager.ResourceTypeGNS:
+	case resourcemanager.ResourceTypeGNP:
 		input = &dto.ListGNPsInput{IsOrder: ListGNPsByIsOrder}
 	default:
 		return fmt.Errorf("unsupported resources type: %s", resourceType)
@@ -100,7 +100,7 @@ func list(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printResources(resourceMgr resouremanager.Resource, resources interface{}) error {
+func printResources(resourceMgr resourcemanager.Resource, resources interface{}) error {
 	header := resourceMgr.GetHeader()
 	headerMap := resourceMgr.GetHeaderMap()
 

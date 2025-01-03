@@ -8,10 +8,10 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/api/v1/mapper"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
 type gnsService interface {
@@ -19,6 +19,7 @@ type gnsService interface {
 	List(ctx context.Context) ([]*entity.GlobalNetworkSet, *ierror.Error)
 	Get(ctx context.Context, name string) (*entity.GlobalNetworkSet, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
+	Validate(ctx context.Context, input *model.CreateGlobalNetworkSetInput) (*model.ValidateGlobalNetworkSetOutput, *ierror.Error)
 }
 
 func NewGNS(s gnsService) *gns {
@@ -82,4 +83,20 @@ func (h *gns) Delete(c *gin.Context) {
 		return
 	}
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, nil)
+}
+
+func (h *gns) Validate(c *gin.Context) {
+	in := new(dto.CreateGlobalNetworkSetInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	validateGlobalNetworkSetOutput, ierr := h.service.Validate(c.Request.Context(), mapper.ToCreateGlobalNetworkSetInput(in))
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToValidateGlobalNetworkSetOutput(validateGlobalNetworkSetOutput))
 }

@@ -11,16 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/common/errlist"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/common/errlist"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
-func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) (*entity.GlobalNetworkPolicy, *ierror.CoreError) {
+func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetworkPolicy) *ierror.CoreError {
 	session, err := r.mongo.Database.Client().StartSession()
 	if err != nil {
-		return nil, errlist.ErrDatabase.WithChild(err)
+		return errlist.ErrDatabase.WithChild(err)
 	}
 	defer session.EndSession(ctx)
 
@@ -70,12 +70,12 @@ func (r *PolicyDB) UpsertGroupPolicy(ctx context.Context, gnp *entity.GlobalNetw
 	if sessionErr != nil {
 		var coreErr *ierror.CoreError
 		if errors.As(sessionErr, &coreErr) {
-			return nil, coreErr
+			return coreErr
 		}
-		return nil, errlist.ErrDatabase.WithChild(sessionErr)
+		return errlist.ErrDatabase.WithChild(sessionErr)
 	}
 
-	return gnp, nil
+	return nil
 }
 
 func (r *PolicyDB) GetGNPByName(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.CoreError) {

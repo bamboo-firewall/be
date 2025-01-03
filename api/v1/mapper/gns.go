@@ -2,8 +2,8 @@ package mapper
 
 import (
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
 )
 
 func ToListGlobalNetworkSetDTOs(gnss []*entity.GlobalNetworkSet) []*dto.GlobalNetworkSet {
@@ -30,6 +30,7 @@ func ToGlobalNetworkSetDTO(gns *entity.GlobalNetworkSet) *dto.GlobalNetworkSet {
 			Nets: gns.Spec.Nets,
 		},
 		Description: gns.Description,
+		FilePath:    gns.FilePath,
 		CreatedAt:   gns.CreatedAt.Local(),
 		UpdatedAt:   gns.UpdatedAt.Local(),
 	}
@@ -45,5 +46,13 @@ func ToCreateGlobalNetworkSetInput(in *dto.CreateGlobalNetworkSetInput) *model.C
 			Nets: in.Spec.Nets,
 		},
 		Description: in.Description,
+		FilePath:    in.FilePath,
+	}
+}
+
+func ToValidateGlobalNetworkSetOutput(validateGlobalNetworkSetOutput *model.ValidateGlobalNetworkSetOutput) *dto.ValidateGlobalNetworkSetOutput {
+	return &dto.ValidateGlobalNetworkSetOutput{
+		GNS:        ToGlobalNetworkSetDTO(validateGlobalNetworkSetOutput.GNS),
+		GNSExisted: ToGlobalNetworkSetDTO(validateGlobalNetworkSetOutput.GNSExisted),
 	}
 }

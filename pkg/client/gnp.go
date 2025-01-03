@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
 )
 
 func (c *apiServer) CreateGNP(ctx context.Context, input *dto.CreateGlobalNetworkPolicyInput) error {
@@ -26,7 +26,7 @@ func (c *apiServer) CreateGNP(ctx context.Context, input *dto.CreateGlobalNetwor
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when create globalnetworkpolicy, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
@@ -44,7 +44,7 @@ func (c *apiServer) ListGNPs(ctx context.Context, input *dto.ListGNPsInput) ([]*
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when list gnp, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var gnps []*dto.GlobalNetworkPolicy
@@ -65,7 +65,7 @@ func (c *apiServer) GetGNP(ctx context.Context, input *dto.GetGNPInput) (*dto.Gl
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when get globalnetworkpolicy by name, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var gnp *dto.GlobalNetworkPolicy
@@ -89,8 +89,37 @@ func (c *apiServer) DeleteGNP(ctx context.Context, input *dto.DeleteGlobalNetwor
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when delete globalnetworkpolicy, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
+}
+
+func (c *apiServer) ValidateGlobalNetworkPolicy(ctx context.Context, input *dto.CreateGlobalNetworkPolicyInput) (*dto.ValidateGlobalNetworkPolicyOutput, error) {
+	inputBytes, err := json.Marshal(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal input to validate global network policy: %w", err)
+	}
+
+	res := c.client.NewRequest().
+		SetSubURL("/api/v1/globalNetworkPolicies/validate").
+		SetHeader(httpbase.HeaderContentType, httpbase.MIMEApplicationJSON).
+		SetBody(bytes.NewReader(inputBytes)).
+		SetMethod(http.MethodPost).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to validate global network policy: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, responseBodyToIError(ctx, res)
+	}
+
+	var validateGlobalNetworkPolicyOutput *dto.ValidateGlobalNetworkPolicyOutput
+	if err = json.Unmarshal(res.Body, &validateGlobalNetworkPolicyOutput); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when validate global network policy response: %s, err: %w", string(res.Body), err)
+	}
+
+	return validateGlobalNetworkPolicyOutput, nil
 }

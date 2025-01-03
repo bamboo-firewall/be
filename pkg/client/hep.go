@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
 )
 
 func (c *apiServer) CreateHEP(ctx context.Context, input *dto.CreateHostEndpointInput) error {
@@ -25,7 +25,7 @@ func (c *apiServer) CreateHEP(ctx context.Context, input *dto.CreateHostEndpoint
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when create hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
@@ -52,7 +52,7 @@ func (c *apiServer) ListHEPs(ctx context.Context, input *dto.ListHostEndpointsIn
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when list hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var heps []*dto.HostEndpoint
@@ -73,7 +73,7 @@ func (c *apiServer) GetHEP(ctx context.Context, input *dto.GetHostEndpointInput)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code when get hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
+		return nil, responseBodyToIError(ctx, res)
 	}
 
 	var hep *dto.HostEndpoint
@@ -97,8 +97,37 @@ func (c *apiServer) DeleteHEP(ctx context.Context, input *dto.DeleteHostEndpoint
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code when delete hostendpoint, status code: %d, response: %s", res.StatusCode, res.Body)
+		return responseBodyToIError(ctx, res)
 	}
 
 	return nil
+}
+
+func (c *apiServer) ValidateHostEndpoint(ctx context.Context, input *dto.CreateHostEndpointInput) (*dto.ValidateHostEndpointOutput, error) {
+	inputBytes, err := json.Marshal(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal input to validate hostendpoint: %w", err)
+	}
+
+	res := c.client.NewRequest().
+		SetSubURL("/api/v1/hostEndpoints/validate").
+		SetHeader(httpbase.HeaderContentType, httpbase.MIMEApplicationJSON).
+		SetBody(bytes.NewReader(inputBytes)).
+		SetMethod(http.MethodPost).
+		DoRequest(ctx)
+
+	if res.Err != nil {
+		return nil, fmt.Errorf("failed to validate hostendpoint: %w", res.Err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, responseBodyToIError(ctx, res)
+	}
+
+	var validateHostEndpointOutput *dto.ValidateHostEndpointOutput
+	if err = json.Unmarshal(res.Body, &validateHostEndpointOutput); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal when validate hostendpoint response: %s, err: %w", string(res.Body), err)
+	}
+
+	return validateHostEndpointOutput, nil
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/common"
-	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resouremanager"
+	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resourcemanager"
 	"github.com/bamboo-firewall/be/pkg/client"
 )
 
@@ -52,11 +52,11 @@ func create(cmd *cobra.Command, args []string) error {
 
 	var resources []*common.ResourceFile
 	switch resourceMgr.GetResourceType() {
-	case resouremanager.ResourceTypeHEP:
+	case resourcemanager.ResourceTypeHEP:
 		resources, err = common.GetResourceFilesByFileNames[dto.CreateHostEndpointInput](fileCreates)
-	case resouremanager.ResourceTypeGNS:
+	case resourcemanager.ResourceTypeGNS:
 		resources, err = common.GetResourceFilesByFileNames[dto.CreateGlobalNetworkSetInput](fileCreates)
-	case resouremanager.ResourceTypeGNP:
+	case resourcemanager.ResourceTypeGNP:
 		resources, err = common.GetResourceFilesByFileNames[dto.CreateGlobalNetworkPolicyInput](fileCreates)
 	default:
 		return fmt.Errorf("unsupported resource type: %s", resourceType)
@@ -68,7 +68,7 @@ func create(cmd *cobra.Command, args []string) error {
 	apiServer := client.NewAPIServer(os.Getenv(common.APIServerENV))
 	var numHandled int
 	for _, r := range resources {
-		err = resourceMgr.Create(context.Background(), apiServer, r.Content)
+		err = resourceMgr.Create(context.Background(), apiServer, r.FilePath, r.Content)
 		if err != nil {
 			fmt.Printf("Fail to create resource: %s. Error: %v\n", r.Name, err)
 		} else {

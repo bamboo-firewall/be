@@ -9,7 +9,7 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/common"
-	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resouremanager"
+	"github.com/bamboo-firewall/be/cmd/bamboofwcli/command/resourcemanager"
 	"github.com/bamboo-firewall/be/pkg/client"
 )
 
@@ -75,7 +75,7 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	var resourcesName []string
-	if resourceMgr.GetResourceType() == resouremanager.ResourceTypeHEP {
+	if resourceMgr.GetResourceType() == resourcemanager.ResourceTypeHEP {
 		if deleteHEPByTenantID > 0 && deleteHEPByIP != "" && len(fileDeletes) > 0 {
 			return fmt.Errorf("cannot use tenantID, ip with file param together")
 		} else if (deleteHEPByTenantID == 0 || deleteHEPByIP == "") && len(fileDeletes) == 0 {
@@ -95,11 +95,11 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 	var resources []*common.ResourceFile
 	if len(fileDeletes) > 0 {
 		switch resourceMgr.GetResourceType() {
-		case resouremanager.ResourceTypeHEP:
+		case resourcemanager.ResourceTypeHEP:
 			resources, err = common.GetResourceFilesByFileNames[dto.DeleteHostEndpointInput](fileDeletes)
-		case resouremanager.ResourceTypeGNS:
+		case resourcemanager.ResourceTypeGNS:
 			resources, err = common.GetResourceFilesByFileNames[dto.DeleteGlobalNetworkSetInput](fileDeletes)
-		case resouremanager.ResourceTypeGNP:
+		case resourcemanager.ResourceTypeGNP:
 			resources, err = common.GetResourceFilesByFileNames[dto.DeleteGlobalNetworkPolicyInput](fileDeletes)
 		default:
 			return fmt.Errorf("unsupported resource type: %s", resourceType)
@@ -110,8 +110,8 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 	} else {
 		for _, name := range resourcesName {
 			switch resourceMgr.GetResourceType() {
-			case resouremanager.ResourceTypeHEP:
-			case resouremanager.ResourceTypeGNS:
+			case resourcemanager.ResourceTypeHEP:
+			case resourcemanager.ResourceTypeGNS:
 				resources = append(resources, &common.ResourceFile{
 					Name: name,
 					Content: &dto.DeleteGlobalNetworkSetInput{
@@ -120,7 +120,7 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 						},
 					},
 				})
-			case resouremanager.ResourceTypeGNP:
+			case resourcemanager.ResourceTypeGNP:
 				resources = append(resources, &common.ResourceFile{
 					Name: name,
 					Content: &dto.DeleteGlobalNetworkPolicyInput{
@@ -134,7 +134,7 @@ func deleteResources(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if resourceMgr.GetResourceType() == resouremanager.ResourceTypeHEP {
+		if resourceMgr.GetResourceType() == resourcemanager.ResourceTypeHEP {
 			resources = append(resources, &common.ResourceFile{
 				Name: fmt.Sprintf("%d_%s", deleteHEPByTenantID, deleteHEPByIP),
 				Content: &dto.DeleteHostEndpointInput{

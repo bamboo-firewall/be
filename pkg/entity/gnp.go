@@ -26,6 +26,7 @@ type GlobalNetworkPolicy struct {
 	Metadata    GNPMetadata        `bson:"metadata"`
 	Spec        GNPSpec            `bson:"spec"`
 	Description string             `bson:"description"`
+	FilePath    string             `bson:"file_path"`
 	CreatedAt   time.Time          `bson:"created_at"`
 	UpdatedAt   time.Time          `bson:"updated_at"`
 }

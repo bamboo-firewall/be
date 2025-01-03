@@ -1,9 +1,12 @@
 package model
 
+import "github.com/bamboo-firewall/be/pkg/entity"
+
 type CreateGlobalNetworkPolicyInput struct {
 	Metadata    GNPMetadataInput
 	Spec        GNPSpecInput
 	Description string
+	FilePath    string
 }
 
 type GNPMetadataInput struct {
@@ -38,4 +41,9 @@ type GNPSpecRuleEntityInput struct {
 
 type ListGNPsInput struct {
 	IsOrder bool
+}
+
+type PolicyWithRelatedHostEndpoint struct {
+	GNP        *entity.GlobalNetworkPolicy
+	ParsedHEPs []*ParsedHEP
 }

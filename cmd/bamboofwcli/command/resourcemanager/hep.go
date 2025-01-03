@@ -1,4 +1,4 @@
-package resouremanager
+package resourcemanager
 
 import (
 	"context"
@@ -13,8 +13,9 @@ func NewHEP() Resource {
 type hep struct {
 }
 
-func (h *hep) Create(ctx context.Context, apiServer APIServer, resource interface{}) error {
+func (h *hep) Create(ctx context.Context, apiServer APIServer, filePath string, resource interface{}) error {
 	r := resource.(*dto.CreateHostEndpointInput)
+	r.FilePath = filePath
 	return apiServer.CreateHEP(ctx, r)
 }
 
@@ -31,6 +32,12 @@ func (h *hep) Get(ctx context.Context, apiServer APIServer, resource interface{}
 func (h *hep) Delete(ctx context.Context, apiServer APIServer, resource interface{}) error {
 	r := resource.(*dto.DeleteHostEndpointInput)
 	return apiServer.DeleteHEP(ctx, r)
+}
+
+func (h *hep) Validate(ctx context.Context, apiServer APIServer, filePath string, resource interface{}) (interface{}, error) {
+	r := resource.(*dto.CreateHostEndpointInput)
+	r.FilePath = filePath
+	return apiServer.ValidateHostEndpoint(ctx, r)
 }
 
 func (h *hep) GetResourceType() ResourceType {

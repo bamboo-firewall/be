@@ -11,16 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 
-	"github.com/bamboo-firewall/be/cmd/server/pkg/common/errlist"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/common/errlist"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
-func (r *PolicyDB) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpoint) (*entity.HostEndpoint, *ierror.CoreError) {
+func (r *PolicyDB) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpoint) *ierror.CoreError {
 	session, err := r.mongo.Database.Client().StartSession()
 	if err != nil {
-		return nil, errlist.ErrDatabase.WithChild(err)
+		return errlist.ErrDatabase.WithChild(err)
 	}
 	defer session.EndSession(ctx)
 
@@ -70,12 +70,12 @@ func (r *PolicyDB) UpsertHostEndpoint(ctx context.Context, hep *entity.HostEndpo
 	if sessionErr != nil {
 		var coreErr *ierror.CoreError
 		if errors.As(sessionErr, &coreErr) {
-			return nil, coreErr
+			return coreErr
 		}
-		return nil, errlist.ErrDatabase.WithChild(sessionErr)
+		return errlist.ErrDatabase.WithChild(sessionErr)
 	}
 
-	return hep, nil
+	return nil
 }
 
 func (r *PolicyDB) GetHostEndpoint(ctx context.Context, input *model.GetHostEndpointInput) (*entity.HostEndpoint, *ierror.CoreError) {

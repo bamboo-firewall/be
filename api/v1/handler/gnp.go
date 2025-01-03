@@ -8,10 +8,10 @@ import (
 
 	"github.com/bamboo-firewall/be/api/v1/dto"
 	"github.com/bamboo-firewall/be/api/v1/mapper"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/entity"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase"
-	"github.com/bamboo-firewall/be/cmd/server/pkg/httpbase/ierror"
 	"github.com/bamboo-firewall/be/domain/model"
+	"github.com/bamboo-firewall/be/pkg/entity"
+	"github.com/bamboo-firewall/be/pkg/httpbase"
+	"github.com/bamboo-firewall/be/pkg/httpbase/ierror"
 )
 
 type gnpService interface {
@@ -19,6 +19,7 @@ type gnpService interface {
 	List(ctx context.Context, input *model.ListGNPsInput) ([]*entity.GlobalNetworkPolicy, *ierror.Error)
 	Get(ctx context.Context, name string) (*entity.GlobalNetworkPolicy, *ierror.Error)
 	Delete(ctx context.Context, name string) *ierror.Error
+	Validate(ctx context.Context, input *model.CreateGlobalNetworkPolicyInput) (*model.ValidateGlobalNetworkPolicyOutput, *ierror.Error)
 }
 
 func NewGNP(s gnpService) *gnp {
@@ -88,4 +89,20 @@ func (h *gnp) Delete(c *gin.Context) {
 		return
 	}
 	httpbase.ReturnSuccessResponse(c, http.StatusOK, nil)
+}
+
+func (h *gnp) Validate(c *gin.Context) {
+	in := new(dto.CreateGlobalNetworkPolicyInput)
+	if ierr := httpbase.BindInput(c, in); ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	validateGlobalNetworkPolicy, ierr := h.service.Validate(c.Request.Context(), mapper.ToCreateGlobalNetworkPolicyInput(in))
+	if ierr != nil {
+		httpbase.ReturnErrorResponse(c, ierr)
+		return
+	}
+
+	httpbase.ReturnSuccessResponse(c, http.StatusOK, mapper.ToValidateGlobalNetworkPolicyOutput(validateGlobalNetworkPolicy))
 }
